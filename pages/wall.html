@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Interactive Gallery</title>
+    <title>WALL OF FAME | SS</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/split-type"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/CustomEase.min.js"></script>
@@ -393,16 +393,16 @@ h3 {
 }
 
 .item-name {
-  font-family: "PP Neue Montreal", sans-serif;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: -0.03em;
-  margin-bottom: 2px;
-  position: relative;
-  overflow: hidden;
-  height: 16px;
+    font-family: "PP Neue Montreal", sans-serif;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: visible;
+    height: 20px;
 }
 
 .item-name .word {
@@ -412,13 +412,7 @@ h3 {
 }
 
 .item-number {
-  font-family: "TheGoodMonolith", monospace;
-  color: #888888;
-  font-size: 10px;
-  font-weight: 400;
-  position: relative;
-  overflow: hidden;
-  height: 14px;
+  display: none !important;
 }
 
 .item-number .char {
@@ -640,43 +634,30 @@ gsap.registerPlugin(CustomEase);
 CustomEase.create("hop", "0.9, 0, 0.1, 1");
 // Project titles
 const items = [
-  "Chromatic Loopscape",
-  "Solar Bloom",
-  "Neon Handscape",
-  "Echo Discs",
-  "Void Gaze",
-  "Gravity Sync",
-  "Heat Core",
-  "Fractal Mirage",
-  "Nova Pulse",
-  "Sonic Horizon",
-  "Dream Circuit",
-  "Lunar Mesh",
-  "Radiant Dusk",
-  "Pixel Drift",
-  "Vortex Bloom",
-  "Shadow Static",
-  "Crimson Phase",
-  "Retro Cascade",
-  "Photon Fold",
-  "Zenith Flow"
+  "MENSWEAR",
+  "WOMENSWEAR",
+  "KIDSWEAR",
+  "WATCHES",
+  "FRAGRANCES", 
+  "ACCESSORIES",
+  "BAGS"
 ];
 // Image URLs - replace with your actual image URLs
 const imageUrls = [
   // Menswear
-  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=60",
+  "https://ik.imagekit.io/cdt/wall%20of%20fame%20images/menswear-03.jpg?updatedAt=1748817557082",
   // Womenswear
-  "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=400&q=60",
+  "https://ik.imagekit.io/cdt/wall%20of%20fame%20images/womenswear-07.jpg?updatedAt=1748817557572",
   // Kidswear
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&q=60",
+  "https://ik.imagekit.io/cdt/wall%20of%20fame%20images/kidswear-04.jpg?updatedAt=1748817557536",
   // Watches
-  "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=400&q=60",
-  // Bags
-  "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=400&q=60",
+  "https://ik.imagekit.io/cdt/wall%20of%20fame%20images/watches-02.jpg?updatedAt=1748816750663",
   // Fragrances
-  "https://images.unsplash.com/photo-1519677100203-a0e668c92439?w=400&q=60",
+  "https://ik.imagekit.io/cdt/wall%20of%20fame%20images/fragrances-01.jpg?updatedAt=1748816170029",
+  // Bags
+  "https://ik.imagekit.io/cdt/wall%20of%20fame%20images/fragrances-05.jpg?updatedAt=1748817557565",
   // Home Products
-  "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=400&q=60"
+  "https://ik.imagekit.io/cdt/wall%20of%20fame%20images/bags-06.jpg?updatedAt=1748817557402"
 ];
 const container = document.querySelector(".container");
 const canvas = document.getElementById("canvas");
@@ -685,26 +666,34 @@ const projectTitleElement = document.querySelector(".project-title p");
 // Settings object for Tweakpane
 const settings = {
   // Item sizes
-  baseWidth: 400,
-  smallHeight: 330,
-  largeHeight: 500,
+  baseWidth: 280,
+  smallHeight: 310,
+  largeHeight: 240,
   itemGap: 65,
   hoverScale: 1.05,
-  expandedScale: 0.4, // Percentage of viewport width
+  expandedScale: 0.4,
   dragEase: 0.075,
   momentumFactor: 200,
   bufferZone: 1,
   borderRadius: 0,
   vignetteSize: 0,
   // Page vignette settings - simplified to two main controls
-  vignetteStrength: 0.7, // Controls opacity of all layers
-  vignetteSize: 200, // Controls size of all layers
+  vignetteStrength: 0.7,
+  vignetteSize: 200,
   // Overlay settings
   overlayOpacity: 0.9,
   overlayEaseDuration: 0.8,
   // Animation durations
-  zoomDuration: 0.3, // Faster zoom for expand/collapse
+  zoomDuration: 0.3
 };
+
+// Apply mobile-specific settings
+if (window.matchMedia && window.matchMedia('(max-width: 600px)').matches) {
+  settings.baseWidth = 200;
+  settings.smallHeight = 200;
+  settings.largeHeight = 220;
+}
+
 // Define item sizes based on settings
 let itemSizes = [
   {

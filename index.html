@@ -856,9 +856,11 @@ function animate(currentTime = 0) {
       particles.material.opacity = 0.6 * (1.0 - fadeFactor);
     }
 
-    // Darken background
-    const darkFactor = 1.0 - fadeFactor;
-    renderer.setClearColor(new THREE.Color(0, 0, 0).multiplyScalar(darkFactor));
+    // Darken background to #282828 instead of black
+    const baseColor = new THREE.Color(0x282828);
+    const black = new THREE.Color(0x000000);
+    const lerped = baseColor.clone().lerp(black, fadeFactor);
+    renderer.setClearColor(lerped);
   } else {
     // Reset
     scene.fog.density = params.fogDensity;
@@ -866,7 +868,7 @@ function animate(currentTime = 0) {
       circle.material.opacity = 1.0;
     });
     if (particles) particles.material.opacity = 0.6;
-    renderer.setClearColor(0x000000);
+    renderer.setClearColor(0x282828);
   }
 
   // Render with or without bloom based on settings
