@@ -543,12 +543,20 @@ h3 {
   overflow: hidden;
 }
 
+.logo-style {
+    width: 160px;
+    height: auto;
+    margin: 40px;
+    display: block;
+    margin-top: 20px;
+}
+
     </style>
   </head>
   <body>
     <div class="header">
-      <div class="nav-section">
-        <img src="SS Logo.png" alt="Shoppers Stop Logo" style="width: 120px; height: auto; display: block;" />
+      <div class="nav-section">    
+        <img src="SS Logo.png" class="logo-style" alt="Shoppers Stop Logo" />
       </div>
     </div>
 
@@ -603,19 +611,19 @@ const items = [
 // Image URLs - replace with your actual image URLs
 const imageUrls = [
   // Menswear
-  "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=60",
   // Womenswear
-  "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=400&q=60",
   // Kidswear
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&q=60",
   // Watches
-  "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=400&q=60",
   // Bags
-  "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=400&q=60",
   // Fragrances
-  "https://images.unsplash.com/photo-1519677100203-a0e668c92439?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1519677100203-a0e668c92439?w=400&q=60",
   // Home Products
-  "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=800&q=80"
+  "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=400&q=60"
 ];
 const container = document.querySelector(".container");
 const canvas = document.getElementById("canvas");
@@ -632,7 +640,7 @@ const settings = {
   expandedScale: 0.4, // Percentage of viewport width
   dragEase: 0.075,
   momentumFactor: 200,
-  bufferZone: 3,
+  bufferZone: 1,
   borderRadius: 0,
   vignetteSize: 0,
   // Page vignette settings - simplified to two main controls
@@ -642,7 +650,7 @@ const settings = {
   overlayOpacity: 0.9,
   overlayEaseDuration: 0.8,
   // Animation durations
-  zoomDuration: 0.6 // Reduced from 1.0 to 0.6 for faster zoom
+  zoomDuration: 0.3, // Faster zoom for expand/collapse
 };
 // Define item sizes based on settings
 let itemSizes = [
@@ -979,6 +987,7 @@ function setAndAnimateTitle(title) {
   gsap.set(titleSplit.words, {
     y: "100%"
   });
+  projectTitleElement.style.willChange = 'transform, opacity';
 }
 
 function animateTitleIn() {
@@ -991,9 +1000,9 @@ function animateTitleIn() {
     {
       y: "0%",
       opacity: 1,
-      duration: 1,
-      stagger: 0.1,
-      ease: "power3.out"
+      duration: 0.4,
+      stagger: 0.04,
+      ease: "power1.out"
     }
   );
 }
@@ -1002,19 +1011,18 @@ function animateTitleOut() {
   gsap.to(titleSplit.words, {
     y: "-100%",
     opacity: 0,
-    duration: 1,
-    stagger: 0.1,
-    ease: "power3.out"
+    duration: 0.4,
+    stagger: 0.04,
+    ease: "power1.out"
   });
 }
 // Animate overlay in
 function animateOverlayIn() {
   if (overlayAnimation) overlayAnimation.kill();
-  // Make sure we're using the current setting value
   overlayAnimation = gsap.to(overlay, {
     opacity: settings.overlayOpacity,
     duration: settings.overlayEaseDuration,
-    ease: "power2.inOut",
+    ease: "power1.out",
     overwrite: true
   });
 }
@@ -1024,7 +1032,7 @@ function animateOverlayOut() {
   overlayAnimation = gsap.to(overlay, {
     opacity: 0,
     duration: settings.overlayEaseDuration,
-    ease: "power2.inOut"
+    ease: "power1.out"
   });
 }
 // Determine item size based on position
@@ -1155,46 +1163,40 @@ function expandItem(item, itemIndex) {
   // Create a direct clone of the caption elements for animation
   const captionClone = item.querySelector(".item-caption").cloneNode(true);
   captionClone.classList.add("caption-clone");
+  captionClone.style.willChange = 'transform, opacity';
+  // Hide the original caption immediately
+  item.querySelector(".item-caption").style.opacity = "0";
+  // Apply SplitType to the cloned elements - use words for both
   const nameClone = captionClone.querySelector(".item-name");
   const numberClone = captionClone.querySelector(".item-number");
-  // Apply SplitType to the cloned elements - use words for both
   const nameCloneSplit = new SplitType(nameClone, {
     types: "words"
   });
   const numberCloneSplit = new SplitType(numberClone, {
     types: "words"
   });
-  // Position the clone exactly over the original
-  const captionRect = item
-    .querySelector(".item-caption")
-    .getBoundingClientRect();
-  captionClone.style.left = `${captionRect.left}px`;
-  captionClone.style.bottom = `${window.innerHeight - captionRect.bottom}px`;
-  captionClone.style.width = `${captionRect.width}px`;
-  captionClone.style.zIndex = "10002"; // Explicitly set z-index
-  document.body.appendChild(captionClone);
-  // Hide the original caption immediately
-  item.querySelector(".item-caption").style.opacity = "0";
   // Animate the clone out with clear text movement
-  gsap.to(nameCloneSplit.words, {
-    y: "100%",
-    opacity: 0,
-    duration: 0.6,
-    stagger: 0.03,
-    ease: "power3.in"
-  });
-  gsap.to(numberCloneSplit.words, {
-    y: "100%",
-    opacity: 0,
-    duration: 0.6,
-    stagger: 0.02,
-    delay: 0.05,
-    ease: "power3.in",
-    onComplete: () => {
-      if (captionClone.parentNode) {
-        document.body.removeChild(captionClone);
+  requestAnimationFrame(() => {
+    gsap.to(nameCloneSplit.words, {
+      y: "100%",
+      opacity: 0,
+      duration: 0.3,
+      stagger: 0.02,
+      ease: "power1.out"
+    });
+    gsap.to(numberCloneSplit.words, {
+      y: "100%",
+      opacity: 0,
+      duration: 0.3,
+      stagger: 0.01,
+      delay: 0.02,
+      ease: "power1.out",
+      onComplete: () => {
+        if (captionClone.parentNode) {
+          document.body.removeChild(captionClone);
+        }
       }
-    }
+    });
   });
   const rect = item.getBoundingClientRect();
   originalPosition = {
@@ -1214,8 +1216,8 @@ function expandItem(item, itemIndex) {
   expandedItem.style.width = `${itemWidth}px`;
   expandedItem.style.height = `${itemHeight}px`;
   expandedItem.style.zIndex = "10000"; // Explicitly set z-index
-  // Apply the same border radius as the items
   expandedItem.style.borderRadius = `var(--border-radius, 0px)`;
+  expandedItem.style.willChange = 'transform, opacity';
   const img = document.createElement("img");
   img.src = imgSrc;
   expandedItem.appendChild(img);
@@ -1227,7 +1229,7 @@ function expandItem(item, itemIndex) {
       gsap.to(el, {
         opacity: 0,
         duration: settings.overlayEaseDuration,
-        ease: "power2.inOut"
+        ease: "power1.out"
       });
     }
   });
@@ -1267,7 +1269,7 @@ function closeExpandedItem() {
         opacity: 1,
         duration: settings.overlayEaseDuration,
         delay: 0.3,
-        ease: "power2.inOut"
+        ease: "power1.out"
       });
     }
   });
@@ -1299,22 +1301,17 @@ function closeExpandedItem() {
         const captionClone = document.createElement("div");
         captionClone.className = "caption-clone";
         captionClone.innerHTML = captionElement.innerHTML;
-        // Get the position of where the caption should appear
-        const captionRect = captionElement.getBoundingClientRect();
-        // Position the clone exactly
         captionClone.style.position = "fixed";
-        captionClone.style.left = `${captionRect.left}px`;
-        captionClone.style.bottom = `${
-          window.innerHeight - captionRect.bottom
-        }px`;
-        captionClone.style.width = `${captionRect.width}px`;
+        captionClone.style.left = `${originalRect.left}px`;
+        captionClone.style.bottom = `${window.innerHeight - originalRect.bottom}px`;
+        captionClone.style.width = `${originalRect.width}px`;
         captionClone.style.padding = "10px";
-        captionClone.style.zIndex = "10002"; // Explicitly set z-index
+        captionClone.style.zIndex = "10002";
+        captionClone.style.willChange = 'transform, opacity';
         document.body.appendChild(captionClone);
         // Apply SplitType to the cloned elements
         const nameClone = captionClone.querySelector(".item-name");
         const numberClone = captionClone.querySelector(".item-number");
-        // Make sure the clone elements have the same styling
         nameClone.style.overflow = "hidden";
         numberClone.style.overflow = "hidden";
         const nameCloneSplit = new SplitType(nameClone, {
@@ -1333,32 +1330,32 @@ function closeExpandedItem() {
           opacity: 0
         });
         // Animate the clone in with clear staggered animation
-        gsap.to(nameCloneSplit.words, {
-          y: "0%",
-          opacity: 1,
-          duration: 0.7,
-          stagger: 0.03,
-          ease: "power3.out"
-        });
-        gsap.to(numberCloneSplit.words, {
-          y: "0%",
-          opacity: 1,
-          duration: 0.7,
-          stagger: 0.02,
-          delay: 0.05,
-          ease: "power3.out",
-          onComplete: () => {
-            // Show the original caption
-            captionElement.style.opacity = "1";
-            // Remove the clone
-            if (captionClone.parentNode) {
-              document.body.removeChild(captionClone);
+        requestAnimationFrame(() => {
+          gsap.to(nameCloneSplit.words, {
+            y: "0%",
+            opacity: 1,
+            duration: 0.3,
+            stagger: 0.02,
+            ease: "power1.out"
+          });
+          gsap.to(numberCloneSplit.words, {
+            y: "0%",
+            opacity: 1,
+            duration: 0.3,
+            stagger: 0.01,
+            delay: 0.02,
+            ease: "power1.out",
+            onComplete: () => {
+              captionElement.style.opacity = "1";
+              if (captionClone.parentNode) {
+                document.body.removeChild(captionClone);
+              }
             }
-          }
+          });
         });
       }
       if (expandedItem && expandedItem.parentNode) {
-        document.body.removeChild(expandedItem);
+        expandedItem.parentNode.removeChild(expandedItem);
       }
       if (originalItem) {
         originalItem.style.visibility = "visible";
@@ -1472,7 +1469,7 @@ window.addEventListener("resize", () => {
       width: targetWidth,
       height: targetHeight,
       duration: 0.3,
-      ease: "power2.out"
+      ease: "power1.out"
     });
   } else {
     updateVisibleItems();
