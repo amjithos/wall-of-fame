@@ -333,6 +333,85 @@
       background: none;
       opacity: 1;
     }
+
+    /* Add new animated pulse button styles */
+    .button-pulse {
+      position: relative;
+      margin: 85px auto 0;
+      max-width: 200px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .button__wrapper {
+      position: relative;
+      width: 200px;
+      height: 55px;
+      top: -50px;
+    }
+    .button-pulse #continue-btn {
+      cursor: pointer;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      padding: 8px;
+      font-size: 20px;
+      border: 2px solid rgb(243 197 48 / 70%);
+      background-color: rgb(214 139 139);
+      background-image: linear-gradient(to right, #7d0633, rgb(223 117 100));
+      color: #fff;
+      font-weight: 700;
+      transition: box-shadow 0.5s;
+      font-family: inherit;
+      border-radius: 60px;
+    }
+    .pulsing {
+      width: 99%;
+      height: 99%;
+      border-radius: 50px;
+      z-index: 1;
+      position: relative;
+    }
+    .pulsing:before, .pulsing:after {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border: inherit;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      background: rgb(214 148 33 / 41%);
+      border-radius: inherit;
+      animation: pulsing 1s linear infinite;
+    }
+    .pulsing:after {
+      animation: pulsing1 1s linear infinite;
+    }
+    @keyframes pulsing {
+      0% { opacity: 1; transform: scaleY(1) scaleX(1); }
+      20% { opacity: 0.7; }
+      70% { opacity: 0.5; transform: scaleY(1.8) scaleX(1.3); }
+      80% { opacity: 0; transform: scaleY(1.8) scaleX(1.3); }
+      90% { opacity: 0; transform: scaleY(1) scaleX(1); }
+    }
+    @keyframes pulsing1 {
+      0% { opacity: 1; transform: scaleY(1) scaleX(1); }
+      20% { opacity: 0.7; }
+      70% { opacity: 0.5; transform: scaleY(1.3) scaleX(1.15); }
+      80% { opacity: 0; transform: scaleY(1.3) scaleX(1.15); }
+      90% { opacity: 0; transform: scaleY(1) scaleX(1); }
+    }
+    .button-pulse #continue-btn:hover,
+    .button-pulse #continue-btn:focus {
+      outline: none;
+      border: none;
+    }
   </style>
 </head>
 <body>
@@ -359,7 +438,14 @@
   <div class="title-container" id="title-container">
     <img src="./pages/SSALE LOGO.svg" alt="SSALE Logo" class="logo-style" style="display: block; margin: 0 auto 2rem; max-width: 500px; width: 60vw; height: auto;" />
     <h2 class="subtitle">LIVE NOW!</h2>
-    <a href="./pages/wall.html" class="cta-btn">EXPLORE NOW</a>
+    <div class="button-pulse">
+      <div class="button__wrapper scale">
+        <div class="pulsing"></div>
+        <a href="./pages/wall.html">
+        <button id="continue-btn">EXPLORE NOW</button>
+      </a>
+      </div>
+    </div>
   </div>
 
   <!-- Tweakpane container -->
@@ -499,7 +585,7 @@ const params = {
     },
     {
       progress: 0.75,
-      text: `<img src="svg/text4.png" alt="Narration 4" style="max-width:80vw;max-height:18vh;display:block;margin:0 auto;" />`
+      text: `<img src="svg/text4.png" alt="Narration 4" style="max-width:80vw;max-height:30vh;display:block;margin:0 auto;" />`
     }
   ],
   narrationShowThreshold: 0.01,

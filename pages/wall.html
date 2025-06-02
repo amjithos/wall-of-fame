@@ -425,21 +425,35 @@ h3 {
 .expanded-item {
   position: fixed;
   z-index: 10000;
-  /* Lower than project-title and caption-clone */
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: #000000;
+  background: #000;
+  border-radius: 12px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 400px;
+  width: 90vw;
+  max-height: 90vh;
+  min-width: 260px;
+  min-height: 180px;
+  padding: 0;
   overflow: hidden;
-  cursor: pointer;
-  border-radius: var(--border-radius, 0px);
 }
-
 .expanded-item img {
   width: 100%;
-  height: 100%;
+  height: auto;
   object-fit: cover;
   pointer-events: none;
+}
+.expanded-item .cta-btn {
+  margin-top: auto !important;
+  margin-bottom: 0.5rem;
+  width: 80%;
+  max-width: 320px;
 }
 
 .overlay {
@@ -596,6 +610,118 @@ h3 {
   opacity: 1 !important;
 }
 
+/* Add styles for expanded image wrapper and CTA button overlay */
+.expanded-image-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+.expanded-image-wrapper img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.zoom-overlay-content {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+.zoom-offer-text {
+  color: #fff;
+  font-size: 2.2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  line-height: 1.1;
+  pointer-events: auto;
+}
+.zoom-cta-btn-container {
+  position: absolute;
+  left: 50%;
+  bottom: 2.5%;
+  transform: translateX(-50%);
+  z-index: 3;
+  width: auto;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0;
+  background: none;
+  box-shadow: none;
+  pointer-events: auto;
+}
+
+/* Custom Learn More Button Styles (converted from SCSS) */
+.learn-more {
+  width: auto;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 0.7rem 2rem;
+  background: #333;
+  color: #fff;
+  border-radius: 2rem;
+  font-size: 1.2rem;
+  font-family: inherit;
+  font-weight: 700;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.01em;
+  transition: background 0.2s;
+}
+.learn-more .circle {
+  display: none;
+}
+.learn-more .button-text {
+  color: #fff;
+  font-weight: 700;
+  text-transform: none;
+  font-size: 1.1rem;
+  margin: 0;
+  padding: 0;
+}
+.learn-more:hover {
+  background: #222;
+}
+
+@media (max-width: 600px) {
+  .expanded-item {
+    max-width: 98vw;
+    width: 98vw;
+    padding: 0;
+    border-width: 3px;
+  }
+  .expanded-image-wrapper img {
+    max-width: 98vw;
+    max-height: 40vh;
+  }
+  .zoom-offer-text {
+    font-size: 1.2rem;
+    margin-bottom: 1.2rem;
+  }
+}
+
+/* Hide project-title when zoomed card is open */
+.zoomed-open .project-title {
+  display: none !important;
+}
+
     </style>
   </head>
   <body>
@@ -658,6 +784,33 @@ const imageUrls = [
   "https://ik.imagekit.io/cdt/wall%20of%20fame%20images/fragrances-05.jpg?updatedAt=1748817557565",
   // Home Products
   "https://ik.imagekit.io/cdt/wall%20of%20fame%20images/bags-06.jpg?updatedAt=1748817557402"
+];
+// Expanded image URLs (unique for each item)
+const expandedImageUrls = [
+  // Menswear
+  "https://images.unsplash.com/photo-1517841905240-472988babdf9",
+  // Womenswear
+  "https://images.unsplash.com/photo-1512436991641-6745cdb1723f",
+  // Kidswear
+  "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91",
+  // Watches
+  "https://images.unsplash.com/photo-1465101046530-73398c7f28ca",
+  // Fragrances
+  "https://images.unsplash.com/photo-1519864600265-abb23847ef2c",
+  // Accessories
+  "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2",
+  // Bags
+  "https://images.unsplash.com/photo-1512436991641-6745cdb1723f"
+];
+// CTA links (dummy for now)
+const ctaLinks = [
+  "https://example.com/menswear",
+  "https://example.com/womenswear",
+  "https://example.com/kidswear",
+  "https://example.com/watches",
+  "https://example.com/fragrances",
+  "https://example.com/accessories",
+  "https://example.com/bags"
 ];
 const container = document.querySelector(".container");
 const canvas = document.getElementById("canvas");
@@ -1186,15 +1339,18 @@ function handleItemClick(item, itemIndex) {
 }
 
 function expandItem(item, itemIndex) {
+  document.body.classList.add('zoomed-open');
   isExpanded = true;
   activeItem = item;
   activeItemId = item.id;
   canDrag = false;
   container.style.cursor = "auto";
-  const imgSrc = item.querySelector("img").src;
+  // Use unique expanded image
+  const imgSrc = expandedImageUrls[itemIndex % expandedImageUrls.length] || item.querySelector("img").src;
   const titleIndex = itemIndex % items.length;
   const itemWidth = parseInt(item.dataset.width);
   const itemHeight = parseInt(item.dataset.height);
+  const category = items[titleIndex];
   setAndAnimateTitle(items[titleIndex]);
   // Get the caption elements
   const nameElement = item.querySelector(".item-name");
@@ -1260,10 +1416,34 @@ function expandItem(item, itemIndex) {
   expandedItem.style.zIndex = "10000"; // Explicitly set z-index
   expandedItem.style.borderRadius = `var(--border-radius, 0px)`;
   expandedItem.style.willChange = 'transform, opacity';
+  // Use unique expanded image
+  const imageWrapper = document.createElement("div");
+  imageWrapper.className = "expanded-image-wrapper";
   const img = document.createElement("img");
   img.src = imgSrc;
-  expandedItem.appendChild(img);
-  expandedItem.addEventListener("click", closeExpandedItem);
+  img.style.width = "100%";
+  img.style.height = "100%";
+  img.style.objectFit = "contain";
+  imageWrapper.appendChild(img);
+  // Add overlay content for offer text and button
+  const overlayContent = document.createElement("div");
+  overlayContent.className = "zoom-overlay-content";
+  overlayContent.innerHTML = `
+    <div class="zoom-offer-text">50%<span style='font-size:1.3rem;'>%<br>OFF</span><br><span style='font-size:1.1rem;font-weight:400;'>ON ${category.toUpperCase()}</span></div>
+  `;
+  imageWrapper.appendChild(overlayContent);
+  // Add the button at the bottom center
+  const buttonContainer = document.createElement("div");
+  buttonContainer.className = "zoom-cta-btn-container";
+  buttonContainer.innerHTML = `
+    <a href="https://www.shoppersstop.com/home" target="_blank" style="text-decoration:none;">
+      <button class="learn-more">
+        <span class="button-text">VISIT WEBSITE</span>
+      </button>
+    </a>
+  `;
+  imageWrapper.appendChild(buttonContainer);
+  expandedItem.appendChild(imageWrapper);
   document.body.appendChild(expandedItem);
   // Fade out other items with GSAP
   document.querySelectorAll(".item").forEach((el) => {
@@ -1413,6 +1593,7 @@ function closeExpandedItem() {
       dragVelocityY = 0;
       // Remove active class from overlay after animation completes
       overlay.classList.remove("active");
+      document.body.classList.remove('zoomed-open');
     }
   });
 }
