@@ -87,34 +87,6 @@
       max-width: 600px;
     }
 
-    .quote {
-      font-family: "Inter", sans-serif;
-      font-size: 1.2rem;
-      font-weight: 400;
-      line-height: 1.5;
-      max-width: 700px;
-      margin: 2rem auto 0;
-      letter-spacing: -0.03em;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      h1 {
-        font-size: 3.5rem;
-        margin-bottom: 1.5rem;
-      }
-
-      h2 {
-        font-size: 1.5rem;
-        margin-bottom: 2rem;
-      }
-
-      .quote {
-        font-size: 1rem;
-        line-height: 1.4;
-      }
-    }
-
     .cta-btn {
       display: block;
       margin: 2rem auto 0 auto;
@@ -151,7 +123,7 @@
         padding: 0.8rem 1.8rem;
       }
       .subtitle {
-        font-size: 1.1rem;
+        font-size: 3.0rem;
       }
     }
 
@@ -448,7 +420,10 @@
 
   <!-- Title and subtitle container -->
   <div class="title-container" id="title-container">
-    <img src="./pages/SSALE LOGO.svg" alt="SSALE Logo" class="logo-style" style="display: block; margin: 0 auto 2rem; max-width: 500px; width: 60vw; height: auto;" />
+    <picture>
+      <source srcset="https://ik.imagekit.io/cdt/wall%20of%20fame%20images/SSALE%20LOGO-mobile.svg?updatedAt=1748898269978" media="(max-width: 600px)">
+      <img src="https://ik.imagekit.io/cdt/wall%20of%20fame%20images/SSALE%20LOGO.svg?updatedAt=1748898430751" alt="SSALE Logo" class="logo-style" style="display: block; margin: 0 auto 2rem; max-width: 500px; width: 60vw; height: auto;" />
+    </picture>
     <h2 class="subtitle">LIVE NOW!</h2>
     <div class="button-pulse">
       <div class="button__wrapper scale">
