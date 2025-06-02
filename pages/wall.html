@@ -435,20 +435,24 @@ h3 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  max-width: 400px;
-  width: 90vw;
+  width: 400px;
+  height: 500px;
+  max-width: 98vw;
   max-height: 90vh;
   min-width: 260px;
   min-height: 180px;
   padding: 0;
   overflow: hidden;
+  aspect-ratio: 4/5;
 }
+
 .expanded-item img {
   width: 100%;
   height: auto;
   object-fit: cover;
   pointer-events: none;
 }
+
 .expanded-item .cta-btn {
   margin-top: auto !important;
   margin-bottom: 0.5rem;
@@ -619,6 +623,7 @@ h3 {
   height: 100%;
   z-index: 1;
 }
+
 .expanded-image-wrapper img {
   display: block;
   width: 100%;
@@ -626,6 +631,7 @@ h3 {
   object-fit: cover;
   border-radius: 12px;
 }
+
 .zoom-overlay-content {
   position: absolute;
   z-index: 2;
@@ -639,6 +645,7 @@ h3 {
   align-items: center;
   pointer-events: none;
 }
+
 .zoom-offer-text {
   color: #fff;
   font-size: 2.2rem;
@@ -649,6 +656,7 @@ h3 {
   line-height: 1.1;
   pointer-events: auto;
 }
+
 .zoom-cta-btn-container {
   position: absolute;
   left: 50%;
@@ -702,15 +710,27 @@ h3 {
 
 @media (max-width: 600px) {
   .expanded-item {
-    max-width: 98vw;
-    width: 98vw;
-    padding: 0;
+    width: 90vw;
+    max-width: 600px;
+    height: auto;
+    aspect-ratio: 4/5;
+    min-width: 260px;
+    min-height: 350px;
     border-width: 3px;
+    padding: 0;
   }
+  
+  .expanded-image-wrapper {
+    width: 100%;
+    height: 100%;
+  }
+  
   .expanded-image-wrapper img {
-    max-width: 98vw;
-    max-height: 40vh;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
+  
   .zoom-offer-text {
     font-size: 1.2rem;
     margin-bottom: 1.2rem;
@@ -788,7 +808,7 @@ const imageUrls = [
 // Expanded image URLs (unique for each item)
 const expandedImageUrls = [
   // Menswear
-  "https://images.unsplash.com/photo-1517841905240-472988babdf9",
+  "https://ik.imagekit.io/cdt/wall%20of%20fame%20images/menswear-zoomed-universal.jpg?updatedAt=1748897166541",
   // Womenswear
   "https://images.unsplash.com/photo-1512436991641-6745cdb1723f",
   // Kidswear
@@ -1293,6 +1313,9 @@ function updateVisibleItems() {
       const img = document.createElement("img");
       img.src = imageUrls[itemNum % imageUrls.length];
       img.alt = `Image ${itemNum + 1}`;
+      img.style.objectFit = "cover";
+      img.style.width = "100%";
+      img.style.height = "100%";
       imageContainer.appendChild(img);
       item.appendChild(imageContainer);
       // Add caption inside the image
@@ -1346,11 +1369,12 @@ function expandItem(item, itemIndex) {
   canDrag = false;
   container.style.cursor = "auto";
   // Use unique expanded image
-  const imgSrc = expandedImageUrls[itemIndex % expandedImageUrls.length] || item.querySelector("img").src;
+  let imgSrc = expandedImageUrls[itemIndex % expandedImageUrls.length] || item.querySelector("img").src;
   const titleIndex = itemIndex % items.length;
   const itemWidth = parseInt(item.dataset.width);
   const itemHeight = parseInt(item.dataset.height);
   const category = items[titleIndex];
+  
   setAndAnimateTitle(items[titleIndex]);
   // Get the caption elements
   const nameElement = item.querySelector(".item-name");
@@ -1423,7 +1447,7 @@ function expandItem(item, itemIndex) {
   img.src = imgSrc;
   img.style.width = "100%";
   img.style.height = "100%";
-  img.style.objectFit = "contain";
+  img.style.objectFit = "cover";
   imageWrapper.appendChild(img);
   // Add overlay content for offer text and button
   const overlayContent = document.createElement("div");
@@ -1457,9 +1481,8 @@ function expandItem(item, itemIndex) {
   });
   const viewportWidth = window.innerWidth;
   const targetWidth = viewportWidth * settings.expandedScale;
-  // Maintain aspect ratio from original item
-  const aspectRatio = itemHeight / itemWidth;
-  const targetHeight = targetWidth * aspectRatio;
+  // Use a fixed aspect ratio of 4:5 for all expanded items
+  const targetHeight = targetWidth * (5/4);
   gsap.delayedCall(0.5, animateTitleIn);
   gsap.fromTo(
     expandedItem,
@@ -1474,7 +1497,7 @@ function expandItem(item, itemIndex) {
       height: targetHeight,
       x: 0,
       y: 0,
-      duration: settings.zoomDuration, // Use the faster zoom duration
+      duration: settings.zoomDuration,
       ease: "hop"
     }
   );
