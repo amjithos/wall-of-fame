@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>WALL OF FAME | SSALE</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Staatliches&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
   <style>
     /* Reset */
     * {
@@ -172,6 +173,167 @@
       display: none !important;
       content: none !important;
     }
+
+    /* Narration System */
+    .narration-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 800px;
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .narration-container.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .narration-text {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-weight: 300;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+      width: 100%;
+    }
+
+    .narration-text h1 {
+      font-family: "Staatliches", sans-serif;
+      font-size: clamp(2.5rem, 8vw, 4.5rem);
+      line-height: 1.1;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .narration-text h3 {
+      font-family: "Staatliches", sans-serif;
+      font-size: clamp(1.2rem, 4vw, 2rem);
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .narration-text p {
+      font-size: clamp(1rem, 3vw, 1.4rem);
+      line-height: 1.5;
+      margin: 0;
+      font-weight: 300;
+    }
+
+    /* Progress bar styles */
+    .progress-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, 
+        rgba(255, 48, 48, 0.8),
+        rgba(255, 96, 0, 0.8)
+      );
+      width: 0%;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 15px rgba(255, 48, 48, 0.4);
+      position: relative;
+    }
+
+    .progress-percentage {
+      position: absolute;
+      right: 0;
+      top: -25px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: "Inter", sans-serif;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .progress-bar:hover .progress-percentage {
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      .progress-percentage {
+        font-size: 10px;
+        top: -20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .narration-container {
+        padding: 0.5rem;
+      }
+      
+      .narration-text {
+        margin-bottom: 1rem;
+      }
+    }
+
+    .lottie-swipe-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      height: 400px;
+      z-index: 1100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lottie-swipe-container.visible {
+      opacity: 1;
+    }
+    @media (max-width: 900px) {
+      .lottie-swipe-container {
+        width: 250px;
+        height: 250px;
+      }
+    }
+    @media (max-width: 600px) {
+      .lottie-swipe-container {
+        width: 140px;
+        height: 140px;
+      }
+    }
+
+    body.bg-end {
+      background: url('https://images.unsplash.com/photo-1624269636254-c4dc6c1d0e44?q=80&w=2684&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') center center / contain no-repeat !important;
+      background-color: #000 !important;
+      opacity: 1 !important;
+      z-index: 99999 !important;
+    }
+
+    #container:not(.bg-end) {
+      background: none;
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -179,8 +341,23 @@
     <canvas id="tunnel"></canvas>
   </div>
 
+  <!-- Lottie Swipe Animation (just above progress bar) -->
+  <div class="lottie-swipe-container" id="lottie-swipe-container"></div>
+
+  <!-- Progress bar container -->
+  <div class="progress-container">
+    <div class="progress-bar" id="progress-bar">
+      <span class="progress-percentage" id="progress-percentage">0%</span>
+    </div>
+  </div>
+
+  <!-- Narration container -->
+  <div class="narration-container" id="narration-container">
+    <div class="narration-text" id="narration-text"></div>
+  </div>
+
   <!-- Title and subtitle container -->
-  <div class="title-container visible" id="title-container">
+  <div class="title-container" id="title-container">
     <img src="./pages/SSALE LOGO.svg" alt="SSALE Logo" class="logo-style" style="display: block; margin: 0 auto 2rem; max-width: 500px; width: 60vw; height: auto;" />
     <h2 class="subtitle">LIVE NOW!</h2>
     <a href="./pages/wall.html" class="cta-btn">EXPLORE NOW</a>
@@ -219,8 +396,8 @@ const colorPresets = {
   default: {
     colorA: "#ff3030", // Start of tunnel
     colorB: "#ff6000", // After first quarter
-    colorC: "#00ffff", // After second quarter
-    colorD: "#8800ff" // End of tunnel
+    colorC: "#ffcf00", // After second quarter
+    colorD: "#ffec7f" // End of tunnel
   },
   "dark-abyss": {
     colorA: "#0a0a2a", // Deep dark blue
@@ -258,18 +435,18 @@ const colorPresets = {
 const params = {
   // Structure
   tunnelDepth: 50,
-  circleCount: isLowEndDevice ? 60 : 100,
+  circleCount: 100,
   tunnelRadius: 3,
   tubeThickness: 0.5,
-  circleSegments: isLowEndDevice ? 64 : 128,
-  tubeSegments: isLowEndDevice ? 6 : 8,
+  circleSegments: 128,
+  tubeSegments: 8,
   pathAmplitude: 0.5,
 
   // Appearance
-  colorA: "#ff3030", // Start of tunnel
-  colorB: "#ff6000", // After first quarter
-  colorC: "#00ffff", // After second quarter
-  colorD: "#8800ff", // End of tunnel
+  colorA: "#ff3030",
+  colorB: "#ff6000",
+  colorC: "#ffcf00",
+  colorD: "#ffec7f",
   emission: 0.1,
   metalness: 0.7,
   roughness: 0.4,
@@ -280,32 +457,60 @@ const params = {
   pulseIntensity: 0.8,
   rotationSpeed: 0.011,
   particlesEnabled: true,
-  particleCount: isLowEndDevice ? 500 : 1000,
+  particleCount: 1000,
   particleSize: 0.04,
   particleSpeed: 0.5,
 
   // Stars
   starsEnabled: true,
-  starCount: isLowEndDevice ? 1000 : 2000,
+  starCount: 2000,
   starSize: 0.05,
 
   // Movement
   autoMovement: true,
   manualPosition: 0,
-  scrollSpeed: 1.0,
+  scrollSpeed: 1,
   fadeStart: 0.85,
-  fadeIntensity: 3.0,
+  fadeIntensity: 3,
 
   // Performance
-  qualityPreset: isLowEndDevice ? "low" : "high",
-  useBloom: !isLowEndDevice,
+  qualityPreset: "high",
+  useBloom: true,
 
   // Presets
   colorPreset: "default",
 
   // Title settings
-  titleShowThreshold: 0.95, // When to show the title (0-1)
-  titleHideThreshold: 0.93 // When to hide the title when scrolling back (0-1)
+  titleShowThreshold: 0.95,
+  titleHideThreshold: 0.93,
+
+  // Narration settings
+  narrationPoints: [
+    { 
+      progress: 0.01, 
+      text: '<h1>Welcome to</h1><h1>Shoppers Stop</h1><h1>Wall of Fame</h1>'
+    },
+    { 
+      progress: 0.26, 
+      text: '<h1>Discover the season\'s most-loved brands.</h1>'
+    },
+    { 
+      progress: 0.52, 
+      text: '<h1>With deals you can\'t miss.</h1>'
+    },
+    { 
+      progress: 0.75, 
+      text: '<h1>Across every category you love.</h1>'
+    }
+  ],
+  narrationShowThreshold: 0.01,
+  narrationHideThreshold: 0.95,
+
+  // Swipe instruction settings
+  swipeShowDuration: 5000, // Show for 5 seconds total
+  swipeFadeInDuration: 1000, // Fade in over 1 second
+  swipeFadeOutDuration: 1000, // Fade out over 1 second
+  swipePulseDuration: 2000, // Each pulse cycle duration
 };
 
 // Setup
@@ -603,7 +808,10 @@ function createParticles() {
   scene.add(particles);
 }
 
-// Create the tunnel
+// At the top-level, after other top-level variables:
+let tunnelEndPlane = null;
+
+// In createTunnel, remove 'let' from 'let tunnelEndPlane;' and clean up old plane if it exists:
 function createTunnel() {
   // Remove previous tunnel
   scene.remove(tunnelGroup);
@@ -706,6 +914,87 @@ let deltaTime = 0;
 const titleContainer = document.getElementById("title-container");
 let titleVisible = false;
 
+// Get narration elements
+const narrationContainer = document.getElementById("narration-container");
+const narrationText = document.getElementById("narration-text");
+const progressBar = document.getElementById("progress-bar");
+
+// Add this after DOMContentLoaded or after your other top-level variables:
+const lottieSwipeContainer = document.getElementById('lottie-swipe-container');
+let lottieSwipeAnim = null;
+let lottieLoaded = false;
+let lottieSwipeTimeout = null;
+let lottieSwipeShown = false;
+
+function showLottieSwipe(force = false) {
+  if (!lottieLoaded) {
+    lottieSwipeAnim = lottie.loadAnimation({
+      container: lottieSwipeContainer,
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      path: './animations/swipe-up.json' // Your Lottie file path
+    });
+    lottieLoaded = true;
+  }
+  lottieSwipeContainer.classList.add('visible');
+  lottieSwipeShown = true;
+}
+
+function hideLottieSwipe() {
+  lottieSwipeContainer.classList.remove('visible');
+  if (lottieSwipeAnim) {
+    lottieSwipeAnim.destroy();
+    lottieSwipeContainer.innerHTML = '';
+    lottieLoaded = false;
+  }
+  lottieSwipeShown = false;
+}
+
+// Show Lottie immediately on load
+showLottieSwipe();
+
+// Hide after 2 seconds or on scroll
+lottieSwipeTimeout = setTimeout(() => {
+  hideLottieSwipe();
+}, 2000);
+
+window.addEventListener('scroll', () => {
+  if (lottieSwipeShown) {
+    hideLottieSwipe();
+    clearTimeout(lottieSwipeTimeout);
+  }
+}, { once: true });
+
+// Function to update narration
+function updateNarration(progress) {
+  // Update progress bar
+  const percentage = Math.round(progress * 100);
+  const progressBar = document.getElementById('progress-bar');
+  progressBar.style.width = `${percentage}%`;
+  
+  // Update percentage text
+  const percentageElement = document.getElementById('progress-percentage');
+  if (percentageElement) {
+    percentageElement.textContent = `${percentage}%`;
+  }
+
+  // Find current narration point
+  const currentPoint = params.narrationPoints.reduce((prev, curr) => {
+    return (curr.progress <= progress && curr.progress > prev.progress) ? curr : prev;
+  }, params.narrationPoints[0]);
+
+  // Update narration text
+  narrationText.innerHTML = currentPoint.text;
+
+  // Show/hide narration container based on progress
+  if (progress >= params.narrationShowThreshold && progress <= params.narrationHideThreshold) {
+    narrationContainer.classList.add("visible");
+  } else {
+    narrationContainer.classList.remove("visible");
+  }
+}
+
 // Set up ScrollTrigger
 ScrollTrigger.create({
   trigger: "body",
@@ -714,7 +1003,7 @@ ScrollTrigger.create({
   onUpdate: (self) => {
     scrollProgress = self.progress;
 
-    // Handle title visibility based on scroll progress
+    // Handle title visibility
     if (scrollProgress >= params.titleShowThreshold && !titleVisible) {
       titleContainer.classList.add("visible");
       titleVisible = true;
@@ -722,6 +1011,9 @@ ScrollTrigger.create({
       titleContainer.classList.remove("visible");
       titleVisible = false;
     }
+
+    // Update narration
+    updateNarration(scrollProgress);
 
     if (self.progress > 0.01) {
       document.querySelector(".scroll-indicator")?.classList.add("hidden");
@@ -839,36 +1131,25 @@ function animate(currentTime = 0) {
 
   // Handle fade to black at end
   if (pathProgress > params.fadeStart) {
-    const fadeProgress =
-      (pathProgress - params.fadeStart) / (1 - params.fadeStart);
-    const fadeFactor = Math.pow(fadeProgress, params.fadeIntensity);
-
-    // Increase fog
-    scene.fog.density = params.fogDensity * (1 + fadeFactor * 30);
-
-    // Fade out circles
-    tunnelGroup.children.forEach((circle) => {
-      circle.material.opacity = 1.0 - fadeFactor * 0.9;
-    });
-
-    // Fade particles too
-    if (particles) {
-      particles.material.opacity = 0.6 * (1.0 - fadeFactor);
+    document.body.classList.add('bg-end');
+    if (pathProgress > 0.99) {
+      document.getElementById('container').style.opacity = 0;
+      document.getElementById('container').style.display = 'none';
+      document.querySelectorAll('canvas').forEach(c => c.style.display = 'none');
+    } else {
+      document.getElementById('container').style.opacity = 1 - Math.min(1, (pathProgress - params.fadeStart) / (1 - params.fadeStart));
+      document.getElementById('container').style.display = '';
+      document.querySelectorAll('canvas').forEach(c => c.style.display = '');
     }
-
-    // Darken background to #282828 instead of black
-    const baseColor = new THREE.Color(0x282828);
-    const black = new THREE.Color(0x000000);
-    const lerped = baseColor.clone().lerp(black, fadeFactor);
-    renderer.setClearColor(lerped);
+    renderer.setClearColor(0x000000, 0); // transparent
+    scene.fog.density = params.fogDensity * (1 - Math.min(1, (pathProgress - params.fadeStart) / (1 - params.fadeStart)));
   } else {
-    // Reset
+    document.body.classList.remove('bg-end');
+    document.getElementById('container').style.opacity = 1;
+    document.getElementById('container').style.display = '';
+    document.querySelectorAll('canvas').forEach(c => c.style.display = '');
+    renderer.setClearColor(0x282828, 1); // or your default color
     scene.fog.density = params.fogDensity;
-    tunnelGroup.children.forEach((circle) => {
-      circle.material.opacity = 1.0;
-    });
-    if (particles) particles.material.opacity = 0.6;
-    renderer.setClearColor(0x282828);
   }
 
   // Render with or without bloom based on settings
@@ -880,6 +1161,17 @@ function animate(currentTime = 0) {
 
   stats.end();
   animationFrameId = requestAnimationFrame(animate);
+
+  const endScreen = document.getElementById('end-screen');
+  if (pathProgress > 0.99) {
+    endScreen.style.display = 'flex';
+    document.getElementById('container').style.display = 'none';
+    document.querySelectorAll('.narration-container, .title-container, .cta-btn').forEach(el => el.style.display = 'none');
+  } else {
+    endScreen.style.display = 'none';
+    document.getElementById('container').style.display = '';
+    document.querySelectorAll('.narration-container, .title-container, .cta-btn').forEach(el => el.style.display = '');
+  }
 }
 
 // Apply color preset
@@ -949,6 +1241,16 @@ const pane = new Pane({
   container: document.getElementById("tweakpane-container")
 });
 
+// Function to save current values
+function saveCurrentValues() {
+  const currentValues = {};
+  for (const key in params) {
+    currentValues[key] = params[key];
+  }
+  console.log('Current Values:', currentValues);
+  return currentValues;
+}
+
 // Add tabs
 const tabs = pane.addTab({
   pages: [
@@ -959,12 +1261,88 @@ const tabs = pane.addTab({
     { title: "Stars" },
     { title: "Movement" },
     { title: "Performance" },
-    { title: "Title" } // Tab for title settings
+    { title: "Title" },
+    { title: "Narration" }
   ]
 });
 
 // Presets tab
 const presetsTab = tabs.pages[0];
+
+// Add save button at the top of presets tab
+presetsTab.addButton({
+  title: 'Save Current Values',
+  label: 'SAVE CURRENT SETTINGS',
+}).on('click', () => {
+  // Get all current values
+  const currentSettings = {
+    // Structure
+    tunnelDepth: params.tunnelDepth,
+    circleCount: params.circleCount,
+    tunnelRadius: params.tunnelRadius,
+    tubeThickness: params.tubeThickness,
+    circleSegments: params.circleSegments,
+    tubeSegments: params.tubeSegments,
+    pathAmplitude: params.pathAmplitude,
+
+    // Appearance
+    colorA: params.colorA,
+    colorB: params.colorB,
+    colorC: params.colorC,
+    colorD: params.colorD,
+    emission: params.emission,
+    metalness: params.metalness,
+    roughness: params.roughness,
+    fogDensity: params.fogDensity,
+
+    // Effects
+    pulseSpeed: params.pulseSpeed,
+    pulseIntensity: params.pulseIntensity,
+    rotationSpeed: params.rotationSpeed,
+    particlesEnabled: params.particlesEnabled,
+    particleCount: params.particleCount,
+    particleSize: params.particleSize,
+    particleSpeed: params.particleSpeed,
+
+    // Stars
+    starsEnabled: params.starsEnabled,
+    starCount: params.starCount,
+    starSize: params.starSize,
+
+    // Movement
+    autoMovement: params.autoMovement,
+    manualPosition: params.manualPosition,
+    scrollSpeed: params.scrollSpeed,
+    fadeStart: params.fadeStart,
+    fadeIntensity: params.fadeIntensity,
+
+    // Performance
+    qualityPreset: params.qualityPreset,
+    useBloom: params.useBloom,
+
+    // Title settings
+    titleShowThreshold: params.titleShowThreshold,
+    titleHideThreshold: params.titleHideThreshold,
+
+    // Narration settings
+    narrationPoints: params.narrationPoints,
+    narrationShowThreshold: params.narrationShowThreshold,
+    narrationHideThreshold: params.narrationHideThreshold
+  };
+
+  // Log the current settings
+  console.log('Current Settings:', JSON.stringify(currentSettings, null, 2));
+  
+  // Update the default parameters
+  Object.assign(params, currentSettings);
+  
+  // Rebuild tunnel with new values
+  createTunnel();
+  
+  // Show confirmation
+  alert('Current settings have been saved as defaults!');
+});
+
 presetsTab
   .addBinding(params, "colorPreset", {
     options: {
@@ -1136,6 +1514,29 @@ titleTab
     }
   });
 
+// Narration tab
+const narrationTab = tabs.pages[8];
+narrationTab.addBinding(params, "narrationShowThreshold", {
+  min: 0.01,
+  max: 0.99,
+  step: 0.01,
+  label: "Show at"
+});
+narrationTab
+  .addBinding(params, "narrationHideThreshold", {
+    min: 0.01,
+    max: 0.99,
+    step: 0.01,
+    label: "Hide at"
+  })
+  .on("change", () => {
+    // Ensure hide threshold is less than show threshold
+    if (params.narrationHideThreshold >= params.narrationShowThreshold) {
+      params.narrationHideThreshold = params.narrationShowThreshold - 0.02;
+      pane.refresh();
+    }
+  });
+
 // Handle resize
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -1148,5 +1549,18 @@ window.addEventListener("resize", () => {
 animate();
 
   </script>
+
+  <!-- Add this just after <body> -->
+  <div id="end-screen" style="
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: url('https://images.unsplash.com/photo-1624269636254-c4dc6c1d0e44?q=80&w=2684&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') center center / contain no-repeat #000;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  "></div>
 </body>
 </html>
