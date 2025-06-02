@@ -412,6 +412,18 @@
       outline: none;
       border: none;
     }
+
+    #narration-img-main {
+      max-width: 80vw;
+      max-height: 25vh;
+      display: block;
+      margin: 0 auto;
+    }
+    @media (max-width: 600px) {
+      #narration-img-main {
+        max-height: 35vh !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -573,7 +585,7 @@ const params = {
   narrationPoints: [
     {
       progress: 0.01,
-      text: `<img src="svg/Text 1.png" alt="Welcome to Shoppers Stop" style="max-width:80vw;max-height:25vh;display:block;margin:0 auto;" />`
+      text: `<img src="svg/Text 1.png" alt="Welcome to Shoppers Stop" style="max-width:80vw;max-height:25vh;display:block;margin:0 auto;" id="narration-img-main" />`
     },
     {
       progress: 0.26,
@@ -1095,6 +1107,9 @@ function updateNarration(progress) {
   } else {
     narrationContainer.classList.remove("visible");
   }
+
+  // Update narration image for mobile
+  updateNarrationImageForMobile();
 }
 
 // Set up ScrollTrigger
@@ -1712,6 +1727,19 @@ function createTunnelEndParticles() {
   tunnelEndParticlesGroup.add(tunnelEndParticles);
   tunnelEndParticlesGroup.visible = false;
 }
+
+// Add this JS after DOMContentLoaded or at the end of the script:
+function updateNarrationImageForMobile() {
+  const img = document.getElementById('narration-img-main');
+  if (!img) return;
+  if (window.innerWidth <= 600) {
+    img.src = 'svg/walloffame-logomobile.png';
+  } else {
+    img.src = 'svg/Text 1.png';
+  }
+}
+window.addEventListener('resize', updateNarrationImageForMobile);
+document.addEventListener('DOMContentLoaded', updateNarrationImageForMobile);
 
   </script>
 </body>
