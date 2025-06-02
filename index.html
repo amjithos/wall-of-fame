@@ -120,7 +120,7 @@
       margin: 2rem auto 0 auto;
       padding: 1rem 2.5rem;
       font-size: 1.3rem;
-      max-width: 500px;
+      max-width: 200px;
       font-family: "Staatliches", sans-serif;
       background: #ff3030;
       color: #fff;
@@ -324,7 +324,6 @@
     }
 
     body.bg-end {
-      background: url('https://images.unsplash.com/photo-1624269636254-c4dc6c1d0e44?q=80&w=2684&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') center center / contain no-repeat !important;
       background-color: #000 !important;
       opacity: 1 !important;
       z-index: 99999 !important;
@@ -486,21 +485,21 @@ const params = {
 
   // Narration settings
   narrationPoints: [
-    { 
-      progress: 0.01, 
-      text: '<h1>Welcome to</h1><h1>Shoppers Stop</h1><h1>Wall of Fame</h1>'
+    {
+      progress: 0.01,
+      text: `<img src="svg/Text 1.png" alt="Welcome to Shoppers Stop" style="max-width:80vw;max-height:25vh;display:block;margin:0 auto;" />`
     },
-    { 
-      progress: 0.26, 
-      text: '<h1>Discover the season\'s most-loved brands.</h1>'
+    {
+      progress: 0.26,
+      text: `<img src="svg/text2.png" alt="Narration 2" style="max-width:80vw;max-height:25vh;display:block;margin:0 auto;" />`
     },
-    { 
-      progress: 0.52, 
-      text: '<h1>With deals you can\'t miss.</h1>'
+    {
+      progress: 0.52,
+      text: `<img src="svg/text3.png" alt="Narration 3" style="max-width:80vw;max-height:25vh;display:block;margin:0 auto;" />`
     },
-    { 
-      progress: 0.75, 
-      text: '<h1>Across every category you love.</h1>'
+    {
+      progress: 0.75,
+      text: `<img src="svg/text4.png" alt="Narration 4" style="max-width:80vw;max-height:18vh;display:block;margin:0 auto;" />`
     }
   ],
   narrationShowThreshold: 0.01,
@@ -617,6 +616,20 @@ let particleTexture;
 // Star field
 let starField;
 let starTexture;
+
+// Tunnel end particles (gold, red, white celebratory particles)
+let tunnelEndParticles = null;
+let tunnelEndParticlesMaterial = null;
+let tunnelEndParticlesGeometry = null;
+let tunnelEndParticlesGroup = new THREE.Group();
+scene.add(tunnelEndParticlesGroup);
+let mouse = { x: 0, y: 0 };
+
+// Add mouse move listener for particle interaction
+window.addEventListener('mousemove', (event) => {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+});
 
 // Create a circular particle texture (only once)
 function createParticleTexture() {
@@ -826,6 +839,9 @@ function createTunnel() {
 
   // Create star field (background only, no warp)
   createStarField();
+
+  // Create tunnel end particles
+  createTunnelEndParticles();
 
   // Create materials
   const colorA = new THREE.Color(params.colorA);
@@ -1132,15 +1148,10 @@ function animate(currentTime = 0) {
   // Handle fade to black at end
   if (pathProgress > params.fadeStart) {
     document.body.classList.add('bg-end');
-    if (pathProgress > 0.99) {
-      document.getElementById('container').style.opacity = 0;
-      document.getElementById('container').style.display = 'none';
-      document.querySelectorAll('canvas').forEach(c => c.style.display = 'none');
-    } else {
-      document.getElementById('container').style.opacity = 1 - Math.min(1, (pathProgress - params.fadeStart) / (1 - params.fadeStart));
-      document.getElementById('container').style.display = '';
-      document.querySelectorAll('canvas').forEach(c => c.style.display = '');
-    }
+    // Do NOT hide #container or canvas at the end
+    document.getElementById('container').style.opacity = 1;
+    document.getElementById('container').style.display = '';
+    document.querySelectorAll('canvas').forEach(c => c.style.display = '');
     renderer.setClearColor(0x000000, 0); // transparent
     scene.fog.density = params.fogDensity * (1 - Math.min(1, (pathProgress - params.fadeStart) / (1 - params.fadeStart)));
   } else {
@@ -1152,6 +1163,31 @@ function animate(currentTime = 0) {
     scene.fog.density = params.fogDensity;
   }
 
+  // Show/hide and animate tunnel end particles
+  if (pathProgress > 0.99) {
+    tunnelEndParticlesGroup.visible = true;
+    tunnelEndParticlesGroup.position.copy(camera.position);
+    tunnelEndParticlesGroup.children.forEach(points => {
+      const pos = points.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        pos.array[i * 3] += (mouse.x * 1.2 - pos.array[i * 3]) * 0.05;
+        pos.array[i * 3 + 1] += (mouse.y * 1.2 - pos.array[i * 3 + 1]) * 0.05;
+      }
+      pos.needsUpdate = true;
+    });
+    
+    // Hide overlays to show particles
+    document.querySelectorAll('.title-container, .narration-container, .cta-btn').forEach(el => {
+      el.style.display = 'none';
+    });
+  } else {
+    tunnelEndParticlesGroup.visible = false;
+    // Restore overlays
+    document.querySelectorAll('.title-container, .narration-container, .cta-btn').forEach(el => {
+      el.style.display = '';
+    });
+  }
+
   // Render with or without bloom based on settings
   if (params.useBloom) {
     composer.render();
@@ -1161,17 +1197,6 @@ function animate(currentTime = 0) {
 
   stats.end();
   animationFrameId = requestAnimationFrame(animate);
-
-  const endScreen = document.getElementById('end-screen');
-  if (pathProgress > 0.99) {
-    endScreen.style.display = 'flex';
-    document.getElementById('container').style.display = 'none';
-    document.querySelectorAll('.narration-container, .title-container, .cta-btn').forEach(el => el.style.display = 'none');
-  } else {
-    endScreen.style.display = 'none';
-    document.getElementById('container').style.display = '';
-    document.querySelectorAll('.narration-container, .title-container, .cta-btn').forEach(el => el.style.display = '');
-  }
 }
 
 // Apply color preset
@@ -1548,19 +1573,60 @@ window.addEventListener("resize", () => {
 // Start animation
 animate();
 
-  </script>
+function createTunnelEndParticles() {
+  if (tunnelEndParticles) {
+    tunnelEndParticlesGroup.remove(tunnelEndParticles);
+    tunnelEndParticles.geometry.dispose();
+    tunnelEndParticles.material.dispose();
+    tunnelEndParticles = null;
+  }
+  const count = 120;
+  tunnelEndParticlesGeometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    // Spread particles in a much larger sphere to fill the last slide
+    const r = 4 + Math.random() * 8;
+    const theta = Math.random() * 2 * Math.PI;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const x = r * Math.sin(phi) * Math.cos(theta);
+    const y = r * Math.sin(phi) * Math.sin(theta);
+    const z = r * Math.cos(phi);
+    positions[i * 3] = x;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = z;
+    // Gold, Red, White
+    const colorType = Math.random();
+    if (colorType < 0.5) {
+      // Gold
+      colors[i * 3] = 1; colors[i * 3 + 1] = 0.85; colors[i * 3 + 2] = 0.3;
+    } else if (colorType < 0.8) {
+      // Red
+      colors[i * 3] = 1; colors[i * 3 + 1] = 0.2; colors[i * 3 + 2] = 0.2;
+    } else {
+      // White
+      colors[i * 3] = 1; colors[i * 3 + 1] = 1; colors[i * 3 + 2] = 1;
+    }
+    sizes[i] = 0.7 + Math.random() * 0.7;
+  }
+  tunnelEndParticlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  tunnelEndParticlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  tunnelEndParticlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+  tunnelEndParticlesMaterial = new THREE.PointsMaterial({
+    size: 0.9,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.95,
+    map: createStarTexture(),
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  tunnelEndParticles = new THREE.Points(tunnelEndParticlesGeometry, tunnelEndParticlesMaterial);
+  tunnelEndParticlesGroup.add(tunnelEndParticles);
+  tunnelEndParticlesGroup.visible = false;
+}
 
-  <!-- Add this just after <body> -->
-  <div id="end-screen" style="
-    display: none;
-    position: fixed;
-    top: 0; left: 0; width: 100vw; height: 100vh;
-    background: url('https://images.unsplash.com/photo-1624269636254-c4dc6c1d0e44?q=80&w=2684&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') center center / contain no-repeat #000;
-    z-index: 99999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  "></div>
+  </script>
 </body>
 </html>
