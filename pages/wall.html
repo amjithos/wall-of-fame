@@ -7,7 +7,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/split-type"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/CustomEase.min.js"></script>
-    <script type="module" src="https://cdn.skypack.dev/tweakpane@4.0.4"></script>
     <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/thegoodmonolith" />
     <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/pp-neue-montreal" />
     <style>
@@ -657,9 +656,52 @@ h3 {
   display: none !important;
 }
 
+/* Drag overlay styles */
+.drag-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(20, 20, 20, 0.65);
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.drag-overlay.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+.drag-text {
+  color: #fefcee;
+  font-family: monospace;
+  font-size: 1.3rem;
+  margin-top: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  background: none;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  text-align: center;
+}
+@media (max-width: 600px) {
+  .drag-text {
+    font-size: 1rem;
+  }
+}
+
     </style>
   </head>
   <body>
+    <div id="drag-overlay" class="drag-overlay">
+      <span class="drag-text">Click/touch and drag to explore</span>
+    </div>
     <div class="header">
       <div class="nav-section">    
         <a href="../index.html">
@@ -687,10 +729,7 @@ h3 {
     </div>
 
     <script type="module">
-     import { Pane } from "https://cdn.skypack.dev/tweakpane@4.0.4";
-window.Pane = Pane;
-
-// Register GSAP plugins
+     // Register GSAP plugins
 gsap.registerPlugin(CustomEase);
 CustomEase.create("hop", "0.9, 0, 0.1, 1");
 // Project titles
@@ -751,35 +790,38 @@ const container = document.querySelector(".container");
 const canvas = document.getElementById("canvas");
 const overlay = document.getElementById("overlay");
 const projectTitleElement = document.querySelector(".project-title p");
-// Settings object for Tweakpane
+// Desktop defaults (before mobile override)
 const settings = {
   // Item sizes
   baseWidth: 280,
-  smallHeight: 310,
+  smallHeight: 240,
   largeHeight: 240,
-  itemGap: 65,
-  hoverScale: 1.05,
-  expandedScale: 0.4,
-  dragEase: 0.075,
-  momentumFactor: 200,
+  itemGap: 20,
+  hoverScale: 1.1,
+  expandedScale: 0.45,
+  dragEase: 0.06,
+  momentumFactor: 180,
+  zoomDuration: 1.1,
   bufferZone: 1,
-  borderRadius: 0,
-  vignetteSize: 0,
-  // Page vignette settings - simplified to two main controls
-  vignetteStrength: 0.7,
-  vignetteSize: 200,
+  borderRadius: 7,
+  vignetteSize: 26,
+  // Page vignette
+  vignetteStrength: 0.55,
+  vignetteSize: 440,
   // Overlay settings
-  overlayOpacity: 0.9,
-  overlayEaseDuration: 0.8,
-  // Animation durations
-  zoomDuration: 0.3
+  overlayOpacity: 0.6,
+  overlayEaseDuration: 0.6
 };
 
 // Apply mobile-specific settings
 if (window.matchMedia && window.matchMedia('(max-width: 600px)').matches) {
-  settings.baseWidth = 200;
-  settings.smallHeight = 200;
-  settings.largeHeight = 220;
+  settings.baseWidth = 210;
+  settings.smallHeight = 210;
+  settings.largeHeight = 210;
+  settings.itemGap = 10;
+  settings.bufferZone = 1;
+  settings.borderRadius = 7;
+  settings.vignetteSize = 39;
 }
 
 // Define item sizes based on settings
@@ -824,289 +866,36 @@ let overlayAnimation = null;
 let titleSplit = null;
 let activeCaptionNameSplit = null;
 let activeCaptionNumberSplit = null;
-let paneInstance = null;
-// Initialize Tweakpane
-function initTweakpane() {
-  // Wait for Pane to be available (imported via ES module)
-  if (!window.Pane) {
-    setTimeout(initTweakpane, 100);
-    return;
-  }
-  // Create the pane with a title and make it visible even when collapsed
-  paneInstance = new window.Pane({
-    title: "Gallery Settings",
-    expanded: false
-  });
-  // Make sure the pane is visible by styling its container
-  const paneElement = paneInstance.element;
-  paneElement.style.position = "fixed";
-  paneElement.style.top = "10px";
-  paneElement.style.right = "10px";
-  paneElement.style.zIndex = "10000";
-  // Item size settings
-  const sizeFolder = paneInstance.addFolder({
-    title: "Item Sizes",
-    expanded: false
-  });
-  sizeFolder
-    .addBinding(settings, "baseWidth", {
-      min: 100,
-      max: 600,
-      step: 10
-    })
-    .on("change", updateSettings);
-  sizeFolder
-    .addBinding(settings, "smallHeight", {
-      min: 100,
-      max: 400,
-      step: 10
-    })
-    .on("change", updateSettings);
-  sizeFolder
-    .addBinding(settings, "largeHeight", {
-      min: 100,
-      max: 600,
-      step: 10
-    })
-    .on("change", updateSettings);
-  // Layout settings
-  const layoutFolder = paneInstance.addFolder({
-    title: "Layout",
-    expanded: false
-  });
-  layoutFolder
-    .addBinding(settings, "itemGap", {
-      min: 0,
-      max: 100,
-      step: 5
-    })
-    .on("change", updateSettings);
-  layoutFolder
-    .addBinding(settings, "bufferZone", {
-      min: 1,
-      max: 5,
-      step: 0.5
-    })
-    .on("change", updateSettings);
-  // Style settings
-  const styleFolder = paneInstance.addFolder({
-    title: "Style",
-    expanded: false
-  });
-  styleFolder
-    .addBinding(settings, "borderRadius", {
-      min: 0,
-      max: 16,
-      step: 1
-    })
-    .on("change", updateBorderRadius);
-  // Item vignette settings
-  const itemVignetteFolder = paneInstance.addFolder({
-    title: "Item Vignette",
-    expanded: false
-  });
-  itemVignetteFolder
-    .addBinding(settings, "vignetteSize", {
-      min: 0,
-      max: 50,
-      step: 1
-    })
-    .on("change", updateVignetteSize);
-  // Page vignette settings - simplified to two controls
-  const pageVignetteFolder = paneInstance.addFolder({
-    title: "Page Vignette",
-    expanded: false
-  });
-  pageVignetteFolder
-    .addBinding(settings, "vignetteStrength", {
-      min: 0,
-      max: 1,
-      step: 0.05
-    })
-    .on("change", updatePageVignette);
-  pageVignetteFolder
-    .addBinding(settings, "vignetteSize", {
-      min: 0,
-      max: 500,
-      step: 10
-    })
-    .on("change", updatePageVignette);
-  // Overlay settings
-  const overlayFolder = paneInstance.addFolder({
-    title: "Overlay Animation",
-    expanded: false
-  });
-  overlayFolder.addBinding(settings, "overlayOpacity", {
-    min: 0,
-    max: 1,
-    step: 0.05
-  });
-  overlayFolder.addBinding(settings, "overlayEaseDuration", {
-    min: 0.2,
-    max: 2,
-    step: 0.1
-  });
-  // Animation settings
-  const animationFolder = paneInstance.addFolder({
-    title: "Animation",
-    expanded: false
-  });
-  animationFolder
-    .addBinding(settings, "hoverScale", {
-      min: 1,
-      max: 1.5,
-      step: 0.05
-    })
-    .on("change", updateHoverScale);
-  animationFolder.addBinding(settings, "expandedScale", {
-    min: 0.2,
-    max: 0.8,
-    step: 0.05
-  });
-  animationFolder.addBinding(settings, "dragEase", {
-    min: 0.01,
-    max: 0.2,
-    step: 0.01
-  });
-  animationFolder.addBinding(settings, "momentumFactor", {
-    min: 50,
-    max: 500,
-    step: 10
-  });
-  animationFolder.addBinding(settings, "zoomDuration", {
-    min: 0.2,
-    max: 1.5,
-    step: 0.1
-  });
-  // Add a button to reset the view
-  paneInstance
-    .addButton({
-      title: "Reset View"
-    })
-    .on("click", () => {
-      targetX = 0;
-      targetY = 0;
-    });
-  // Add keyboard shortcut for toggling the panel
-  window.addEventListener("keydown", (e) => {
-    // Toggle panel visibility with the 'h' key
-    if (e.key === "h" || e.key === "H") {
-      togglePaneVisibility();
-    }
-  });
-}
-// Function to toggle the panel visibility
-function togglePaneVisibility() {
-  if (!paneInstance) return;
-  const element = paneInstance.element;
-  if (element.style.display === "none") {
-    element.style.display = "";
-  } else {
-    element.style.display = "none";
+let dragOverlay = document.getElementById('drag-overlay');
+let dragOverlayTimer = null;
+let dragOverlayVisible = true;
+
+function showDragOverlay() {
+  if (!dragOverlayVisible) {
+    dragOverlay.classList.remove('hide');
+    dragOverlayVisible = true;
   }
 }
-// Update CSS variable for border radius
-function updateBorderRadius() {
-  document.documentElement.style.setProperty(
-    "--border-radius",
-    `${settings.borderRadius}px`
-  );
+function hideDragOverlay() {
+  if (dragOverlayVisible) {
+    dragOverlay.classList.add('hide');
+    dragOverlayVisible = false;
+  }
 }
-// Update CSS variable for item vignette
-function updateVignetteSize() {
-  document.documentElement.style.setProperty(
-    "--vignette-size",
-    `${settings.vignetteSize}px`
-  );
+function resetDragOverlayTimer() {
+  clearTimeout(dragOverlayTimer);
+  hideDragOverlay();
+  dragOverlayTimer = setTimeout(() => {
+    showDragOverlay();
+  }, 6000);
 }
-// Update CSS variable for page vignette - now using the simplified controls
-function updatePageVignette() {
-  const strength = settings.vignetteStrength;
-  const size = settings.vignetteSize;
-  // Regular vignette (outer layer)
-  const regularOpacity = strength * 0.7;
-  const regularSize = size * 1.5;
-  document.documentElement.style.setProperty(
-    "--page-vignette-size",
-    `${regularSize}px`
-  );
-  document.documentElement.style.setProperty(
-    "--page-vignette-color",
-    `rgba(0,0,0,${regularOpacity})`
-  );
-  // Strong vignette (middle layer)
-  const strongOpacity = strength * 0.85;
-  const strongSize = size * 0.75;
-  document.documentElement.style.setProperty(
-    "--page-vignette-strong-size",
-    `${strongSize}px`
-  );
-  document.documentElement.style.setProperty(
-    "--page-vignette-strong-color",
-    `rgba(0,0,0,${strongOpacity})`
-  );
-  // Extreme vignette (inner layer)
-  const extremeOpacity = strength;
-  const extremeSize = size * 0.4;
-  document.documentElement.style.setProperty(
-    "--page-vignette-extreme-size",
-    `${extremeSize}px`
-  );
-  document.documentElement.style.setProperty(
-    "--page-vignette-extreme-color",
-    `rgba(0,0,0,${extremeOpacity})`
-  );
-}
-// Update CSS variable for hover scale
-function updateHoverScale() {
-  // Use CSS variables instead of directly modifying CSS rules
-  document.documentElement.style.setProperty(
-    "--hover-scale",
-    settings.hoverScale
-  );
-  // Update all existing items with the new hover scale
-  document.querySelectorAll(".item").forEach((item) => {
-    const img = item.querySelector("img");
-    if (img) {
-      img.style.transition = "transform 0.3s ease";
-    }
-  });
-}
-// Update settings and rebuild the grid
-function updateSettings() {
-  // Update item sizes
-  itemSizes = [
-    {
-      width: settings.baseWidth,
-      height: settings.smallHeight
-    },
-    {
-      width: settings.baseWidth,
-      height: settings.largeHeight
-    }
-  ];
-  itemGap = settings.itemGap;
-  // Remove columns dependency - use a fixed value
-  columns = 4;
-  // Recalculate cell dimensions
-  cellWidth = settings.baseWidth + settings.itemGap;
-  cellHeight =
-    Math.max(settings.smallHeight, settings.largeHeight) + settings.itemGap;
-  // Clear existing items and rebuild
-  visibleItems.forEach((itemId) => {
-    const item = document.getElementById(itemId);
-    if (item && item.parentNode === canvas) {
-      canvas.removeChild(item);
-    }
-  });
-  visibleItems.clear();
-  updateVisibleItems();
-  // Update visual styles
-  updateBorderRadius();
-  updateVignetteSize();
-  updateHoverScale();
-  updatePageVignette();
-}
+// Hide overlay on click/touchstart only (not on mousemove/touchmove)
+['mousedown','touchstart'].forEach(evt => {
+  window.addEventListener(evt, resetDragOverlayTimer, { passive: true });
+});
+// Remove mousemove/touchmove as triggers
+// Show overlay on load
+showDragOverlay();
 
 function setAndAnimateTitle(title) {
   if (titleSplit) titleSplit.revert();
@@ -1647,8 +1436,134 @@ function initializeStyles() {
 initializeStyles();
 updateVisibleItems();
 animate();
-// Initialize Tweakpane after a short delay to ensure DOM is ready
-setTimeout(initTweakpane, 500);
+
+// Add event listeners to overlay for seamless drag
+const wallContainer = document.querySelector('.container');
+function forwardEventToWall(e) {
+  hideDragOverlay();
+  // Create a new event and dispatch it to the wall container
+  let eventType = e.type;
+  let eventInit = { bubbles: true, cancelable: true };
+  if (e.type.startsWith('touch')) {
+    // For touch, clone touches
+    eventInit.touches = e.touches;
+    eventInit.changedTouches = e.changedTouches;
+  } else {
+    eventInit.clientX = e.clientX;
+    eventInit.clientY = e.clientY;
+    eventInit.button = e.button;
+  }
+  // Remove overlay pointer events immediately
+  dragOverlay.style.pointerEvents = 'none';
+  // Forward the event
+  const newEvent = new e.constructor(eventType, eventInit);
+  wallContainer.dispatchEvent(newEvent);
+}
+dragOverlay.addEventListener('mousedown', forwardEventToWall);
+dragOverlay.addEventListener('touchstart', forwardEventToWall);
+
+// Update CSS variable for border radius
+function updateBorderRadius() {
+  document.documentElement.style.setProperty(
+    "--border-radius",
+    `${settings.borderRadius}px`
+  );
+}
+// Update CSS variable for item vignette
+function updateVignetteSize() {
+  document.documentElement.style.setProperty(
+    "--vignette-size",
+    `${settings.vignetteSize}px`
+  );
+}
+// Update CSS variable for page vignette - now using the simplified controls
+function updatePageVignette() {
+  const strength = settings.vignetteStrength;
+  const size = settings.vignetteSize;
+  // Regular vignette (outer layer)
+  const regularOpacity = strength * 0.7;
+  const regularSize = size * 1.5;
+  document.documentElement.style.setProperty(
+    "--page-vignette-size",
+    `${regularSize}px`
+  );
+  document.documentElement.style.setProperty(
+    "--page-vignette-color",
+    `rgba(0,0,0,${regularOpacity})`
+  );
+  // Strong vignette (middle layer)
+  const strongOpacity = strength * 0.85;
+  const strongSize = size * 0.75;
+  document.documentElement.style.setProperty(
+    "--page-vignette-strong-size",
+    `${strongSize}px`
+  );
+  document.documentElement.style.setProperty(
+    "--page-vignette-strong-color",
+    `rgba(0,0,0,${strongOpacity})`
+  );
+  // Extreme vignette (inner layer)
+  const extremeOpacity = strength;
+  const extremeSize = size * 0.4;
+  document.documentElement.style.setProperty(
+    "--page-vignette-extreme-size",
+    `${extremeSize}px`
+  );
+  document.documentElement.style.setProperty(
+    "--page-vignette-extreme-color",
+    `rgba(0,0,0,${extremeOpacity})`
+  );
+}
+// Update CSS variable for hover scale
+function updateHoverScale() {
+  // Use CSS variables instead of directly modifying CSS rules
+  document.documentElement.style.setProperty(
+    "--hover-scale",
+    settings.hoverScale
+  );
+  // Update all existing items with the new hover scale
+  document.querySelectorAll(".item").forEach((item) => {
+    const img = item.querySelector("img");
+    if (img) {
+      img.style.transition = "transform 0.3s ease";
+    }
+  });
+}
+// Update settings and rebuild the grid
+function updateSettings() {
+  // Update item sizes
+  itemSizes = [
+    {
+      width: settings.baseWidth,
+      height: settings.smallHeight
+    },
+    {
+      width: settings.baseWidth,
+      height: settings.largeHeight
+    }
+  ];
+  itemGap = settings.itemGap;
+  // Remove columns dependency - use a fixed value
+  columns = 4;
+  // Recalculate cell dimensions
+  cellWidth = settings.baseWidth + settings.itemGap;
+  cellHeight =
+    Math.max(settings.smallHeight, settings.largeHeight) + settings.itemGap;
+  // Clear existing items and rebuild
+  visibleItems.forEach((itemId) => {
+    const item = document.getElementById(itemId);
+    if (item && item.parentNode === canvas) {
+      canvas.removeChild(item);
+    }
+  });
+  visibleItems.clear();
+  updateVisibleItems();
+  // Update visual styles
+  updateBorderRadius();
+  updateVignetteSize();
+  updateHoverScale();
+  updatePageVignette();
+}
 
     </script>
   </body>
