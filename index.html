@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>WALL OF FAME | SSALE</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Staatliches&display=swap" rel="stylesheet"/>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <style>
     /* Reset */
     * {
@@ -19,9 +19,10 @@
       background-color: #000;
       color: white;
       font-family: "Inter", sans-serif;
-      height: 10000px;
+      height: 500vh;
       overflow-x: hidden;
       letter-spacing: -0.02em;
+      scroll-behavior: smooth;
     }
 
     /* Layout */
@@ -178,6 +179,14 @@
       width: 100%;
     }
 
+    .narration-text.cta-active {
+      margin-bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
     .narration-text h1 {
       font-family: "Staatliches", sans-serif;
       font-size: clamp(2.5rem, 8vw, 4.5rem);
@@ -237,14 +246,10 @@
       border-radius: 4px;
       font-size: 12px;
       font-family: "Inter", sans-serif;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    .progress-bar:hover .progress-percentage {
       opacity: 1;
+      transition: none;
+      pointer-events: auto;
+      white-space: nowrap;
     }
 
     @media (max-width: 768px) {
@@ -261,37 +266,6 @@
       
       .narration-text {
         margin-bottom: 1rem;
-      }
-    }
-
-    .lottie-swipe-container {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 400px;
-      height: 400px;
-      z-index: 1100;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.8s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .lottie-swipe-container.visible {
-      opacity: 1;
-    }
-    @media (max-width: 900px) {
-      .lottie-swipe-container {
-        width: 250px;
-        height: 250px;
-      }
-    }
-    @media (max-width: 600px) {
-      .lottie-swipe-container {
-        width: 140px;
-        height: 140px;
       }
     }
 
@@ -396,15 +370,43 @@
         max-height: 35vh !important;
       }
     }
+
+    .narration-img-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .swipe-indicator {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .swipe-text {
+    color: #fefcee;
+    font-family: monospace;
+    font-size: 1.3rem;
+    margin-top: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+    @media (max-width: 600px) {
+      .swipe-text {
+        font-size: 1rem;
+      }
+      .swipe-indicator svg {
+        width: 40px !important;
+        height: 24px !important;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="container">
     <canvas id="tunnel"></canvas>
   </div>
-
-  <!-- Lottie Swipe Animation (just above progress bar) -->
-  <div class="lottie-swipe-container" id="lottie-swipe-container"></div>
 
   <!-- Progress bar container -->
   <div class="progress-container">
@@ -414,23 +416,18 @@
   </div>
 
   <!-- Narration container -->
-  <div class="narration-container" id="narration-container">
+  <div class="narration-container visible" id="narration-container">
     <div class="narration-text" id="narration-text"></div>
   </div>
 
   <!-- Title and subtitle container -->
   <div class="title-container" id="title-container">
-    <picture>
-      <source srcset="https://ik.imagekit.io/cdt/wall%20of%20fame%20images/SSALE%20LOGO-mobile.svg?updatedAt=1748898269978" media="(max-width: 600px)">
-      <img src="https://ik.imagekit.io/cdt/wall%20of%20fame%20images/SSALE%20LOGO.svg?updatedAt=1748898430751" alt="SSALE Logo" class="logo-style" style="display: block; margin: 0 auto 2rem; max-width: 500px; width: 60vw; height: auto;" />
-    </picture>
-    <h2 class="subtitle">LIVE NOW!</h2>
     <div class="button-pulse">
       <div class="button__wrapper scale">
         <div class="pulsing"></div>
         <a href="./pages/wall.html">
-        <button id="continue-btn">EXPLORE NOW</button>
-      </a>
+          <button id="continue-btn">Click here to enter</button>
+        </a>
       </div>
     </div>
   </div>
@@ -524,6 +521,7 @@ const params = {
   roughness: 0.4,
   fogDensity: 0.065,
 
+
   // Effects
   pulseSpeed: 4.7,
   pulseIntensity: 0.8,
@@ -560,19 +558,34 @@ const params = {
   narrationPoints: [
     {
       progress: 0.01,
-      text: `<img src="svg/Text 1.png" alt="Welcome to Shoppers Stop" style="max-width:80vw;max-height:25vh;display:block;margin:0 auto;" id="narration-img-main" />`
+      text: `
+        <div class="narration-img-stack">
+          <img src="svg/Text 1.png" alt="Welcome to Shoppers Stop" style="max-width:80vw;max-height:25vh;display:block;margin:0 auto;" id="narration-img-main" />
+          <div class="swipe-indicator">
+            <svg width="60" height="40" viewBox="0 0 60 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;">
+              <polyline points="15,25 30,10 45,25" stroke="#ff3c3c" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="15,35 30,20 45,35" stroke="#ff3c3c" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="swipe-text">swipe up to enter</div>
+          </div>
+        </div>
+      `
     },
     {
-      progress: 0.26,
+      progress: 0.18,
       text: `<img src="svg/text2.png" alt="Narration 2" style="max-width:80vw;max-height:25vh;display:block;margin:0 auto;" />`
     },
     {
-      progress: 0.52,
+      progress: 0.35,
       text: `<img src="svg/text3.png" alt="Narration 3" style="max-width:80vw;max-height:25vh;display:block;margin:0 auto;" />`
     },
     {
-      progress: 0.75,
+      progress: 0.52,
       text: `<img src="svg/text4.png" alt="Narration 4" style="max-width:80vw;max-height:30vh;display:block;margin:0 auto;" />`
+    },
+    {
+      progress: 0.95,
+      text: `<div class='button-pulse' style='margin-top: 0;'><div class='button__wrapper scale'><div class='pulsing'></div><a href='./pages/wall.html'><button id='continue-btn'>Click here to enter</button></a></div></div>`
     }
   ],
   narrationShowThreshold: 0.01,
@@ -692,17 +705,9 @@ let starTexture;
 
 // Tunnel end particles (gold, red, white celebratory particles)
 let tunnelEndParticles = null;
-let tunnelEndParticlesMaterial = null;
 let tunnelEndParticlesGeometry = null;
 let tunnelEndParticlesGroup = new THREE.Group();
 scene.add(tunnelEndParticlesGroup);
-let mouse = { x: 0, y: 0 };
-
-// Add mouse move listener for particle interaction
-window.addEventListener('mousemove', (event) => {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-});
 
 // Create a circular particle texture (only once)
 function createParticleTexture() {
@@ -820,7 +825,7 @@ function createParticles() {
   const particlePositions = [];
   const particleColors = [];
   const particleVelocities = [];
-
+  
   const colorA = new THREE.Color(params.colorA);
   const colorB = new THREE.Color(params.colorB);
   const colorC = new THREE.Color(params.colorC);
@@ -894,105 +899,60 @@ function createParticles() {
   scene.add(particles);
 }
 
-// At the top-level, after other top-level variables:
-let tunnelEndPlane = null;
-
-// In createTunnel, remove 'let' from 'let tunnelEndPlane;' and clean up old plane if it exists:
-function createTunnel() {
-  // Remove previous tunnel
-  scene.remove(tunnelGroup);
-  tunnelGroup = new THREE.Group();
-  scene.add(tunnelGroup);
-
-  // Update path
-  tunnelPath = createPath();
-
-  // Create particle system
-  createParticles();
-
-  // Create star field (background only, no warp)
-  createStarField();
-
-  // Create tunnel end particles
-  createTunnelEndParticles();
-
-  // Create materials
-  const colorA = new THREE.Color(params.colorA);
-  const colorB = new THREE.Color(params.colorB);
-  const colorC = new THREE.Color(params.colorC);
-  const colorD = new THREE.Color(params.colorD);
-
-  // Get shared geometry from pool
-  const geometry = getTorusGeometry(
-    params.tunnelRadius,
-    params.tubeThickness,
-    params.tubeSegments,
-    params.circleSegments
-  );
-
-  // Create circles along the path
-  for (let i = 0; i < params.circleCount; i++) {
-    const t = i / (params.circleCount - 1);
-    const pathPoint = tunnelPath.getPointAt(t);
-
-    // Calculate color for this ring using 4-color gradient
-    let color;
-    if (t < 0.25) {
-      // First quarter: colorA to colorB
-      color = new THREE.Color().lerpColors(colorA, colorB, t * 4);
-    } else if (t < 0.5) {
-      // Second quarter: colorB to colorC
-      color = new THREE.Color().lerpColors(colorB, colorC, (t - 0.25) * 4);
-    } else if (t < 0.75) {
-      // Third quarter: colorC to colorD
-      color = new THREE.Color().lerpColors(colorC, colorD, (t - 0.5) * 4);
-    } else {
-      // Last quarter: colorD with darkening
-      color = colorD.clone().multiplyScalar(1 - (t - 0.75) * 0.5);
-    }
-
-    const material = new THREE.MeshStandardMaterial({
-      color: color,
-      emissive: color.clone().multiplyScalar(params.emission),
-      metalness: params.metalness,
-      roughness: params.roughness,
-      transparent: true
-    });
-
-    // Create a torus (ring tube) - reuse geometry
-    const torus = new THREE.Mesh(geometry, material);
-
-    // Get tangent direction for orientation
-    const tangent = tunnelPath.getTangentAt(t);
-
-    // Position and orient the ring
-    torus.position.copy(pathPoint);
-
-    // Align ring with the tangent direction
-    if (Math.abs(tangent.y) < 0.99) {
-      torus.lookAt(
-        pathPoint.x + tangent.x,
-        pathPoint.y + tangent.y,
-        pathPoint.z + tangent.z
-      );
-    }
-
-    // Store some data for animations
-    torus.userData = {
-      initialPositionZ: torus.position.z,
-      index: i,
-      t: t
-    };
-
-    tunnelGroup.add(torus);
+// Create tunnel end particles
+function createTunnelEndParticles() {
+  if (tunnelEndParticles) {
+    tunnelEndParticlesGroup.remove(tunnelEndParticles);
+    tunnelEndParticles.geometry.dispose();
+    tunnelEndParticles.material.dispose();
+    tunnelEndParticles = null;
   }
-
-  // Update fog
-  scene.fog.density = params.fogDensity;
+  const count = 120;
+  tunnelEndParticlesGeometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    // Spread particles in a much larger sphere to fill the last slide
+    const r = 4 + Math.random() * 8;
+    const theta = Math.random() * 2 * Math.PI;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const x = r * Math.sin(phi) * Math.cos(theta);
+    const y = r * Math.sin(phi) * Math.sin(theta);
+    const z = r * Math.cos(phi);
+    positions[i * 3] = x;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = z;
+    // Gold, Red, White
+    const colorType = Math.random();
+    if (colorType < 0.5) {
+      // Gold
+      colors[i * 3] = 1; colors[i * 3 + 1] = 0.85; colors[i * 3 + 2] = 0.3;
+    } else if (colorType < 0.8) {
+      // Red
+      colors[i * 3] = 1; colors[i * 3 + 1] = 0.2; colors[i * 3 + 2] = 0.2;
+    } else {
+      // White
+      colors[i * 3] = 1; colors[i * 3 + 1] = 1; colors[i * 3 + 2] = 1;
+    }
+    sizes[i] = 0.7 + Math.random() * 0.7;
+  }
+  tunnelEndParticlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  tunnelEndParticlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  tunnelEndParticlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+  const tunnelEndParticlesMaterial = new THREE.PointsMaterial({
+    size: 0.9,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.95,
+    map: createStarTexture(),
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  tunnelEndParticles = new THREE.Points(tunnelEndParticlesGeometry, tunnelEndParticlesMaterial);
+  tunnelEndParticlesGroup.add(tunnelEndParticles);
+  tunnelEndParticlesGroup.visible = false;
 }
-
-// Initial creation
-createTunnel();
 
 // Animation and scroll handling
 let scrollProgress = 0;
@@ -1008,111 +968,6 @@ const narrationContainer = document.getElementById("narration-container");
 const narrationText = document.getElementById("narration-text");
 const progressBar = document.getElementById("progress-bar");
 
-// Add this after DOMContentLoaded or after your other top-level variables:
-const lottieSwipeContainer = document.getElementById('lottie-swipe-container');
-let lottieSwipeAnim = null;
-let lottieLoaded = false;
-let lottieSwipeTimeout = null;
-let lottieSwipeShown = false;
-
-function showLottieSwipe(force = false) {
-  if (!lottieLoaded) {
-    lottieSwipeAnim = lottie.loadAnimation({
-      container: lottieSwipeContainer,
-      renderer: 'svg',
-      loop: true,
-      autoplay: true,
-      path: './animations/swipe-up.json' // Your Lottie file path
-    });
-    lottieLoaded = true;
-  }
-  lottieSwipeContainer.classList.add('visible');
-  lottieSwipeShown = true;
-}
-
-function hideLottieSwipe() {
-  lottieSwipeContainer.classList.remove('visible');
-  if (lottieSwipeAnim) {
-    lottieSwipeAnim.destroy();
-    lottieSwipeContainer.innerHTML = '';
-    lottieLoaded = false;
-  }
-  lottieSwipeShown = false;
-}
-
-// Show Lottie immediately on load
-showLottieSwipe();
-
-// Hide after 2 seconds or on scroll
-lottieSwipeTimeout = setTimeout(() => {
-  hideLottieSwipe();
-}, 2000);
-
-window.addEventListener('scroll', () => {
-  if (lottieSwipeShown) {
-    hideLottieSwipe();
-    clearTimeout(lottieSwipeTimeout);
-  }
-}, { once: true });
-
-// Function to update narration
-function updateNarration(progress) {
-  // Update progress bar
-  const percentage = Math.round(progress * 100);
-  const progressBar = document.getElementById('progress-bar');
-  progressBar.style.width = `${percentage}%`;
-  
-  // Update percentage text
-  const percentageElement = document.getElementById('progress-percentage');
-  if (percentageElement) {
-    percentageElement.textContent = `${percentage}%`;
-  }
-
-  // Find current narration point
-  const currentPoint = params.narrationPoints.reduce((prev, curr) => {
-    return (curr.progress <= progress && curr.progress > prev.progress) ? curr : prev;
-  }, params.narrationPoints[0]);
-
-  // Update narration text
-  narrationText.innerHTML = currentPoint.text;
-
-  // Show/hide narration container based on progress
-  if (progress >= params.narrationShowThreshold && progress <= params.narrationHideThreshold) {
-    narrationContainer.classList.add("visible");
-  } else {
-    narrationContainer.classList.remove("visible");
-  }
-
-  // Update narration image for mobile
-  updateNarrationImageForMobile();
-}
-
-// Set up ScrollTrigger
-ScrollTrigger.create({
-  trigger: "body",
-  start: "top top",
-  end: "bottom bottom",
-  onUpdate: (self) => {
-    scrollProgress = self.progress;
-
-    // Handle title visibility
-    if (scrollProgress >= params.titleShowThreshold && !titleVisible) {
-      titleContainer.classList.add("visible");
-      titleVisible = true;
-    } else if (scrollProgress < params.titleHideThreshold && titleVisible) {
-      titleContainer.classList.remove("visible");
-      titleVisible = false;
-    }
-
-    // Update narration
-    updateNarration(scrollProgress);
-
-    if (self.progress > 0.01) {
-      document.querySelector(".scroll-indicator")?.classList.add("hidden");
-    }
-  }
-});
-
 // Animation loop
 let time = 0;
 let animationFrameId;
@@ -1126,10 +981,10 @@ function animate(currentTime = 0) {
 
   time += deltaTime;
 
-  // Calculate camera position based on scroll or manual position
-  let pathProgress;
+  // Use unified scrollProgress
+  let pathProgress = typeof window._scrollProgress === 'number' ? window._scrollProgress : 0;
   if (params.autoMovement) {
-    pathProgress = Math.min(scrollProgress * params.scrollSpeed, 0.99);
+    pathProgress = Math.min(pathProgress * params.scrollSpeed, 0.99);
   } else {
     pathProgress = Math.min(Math.max(params.manualPosition, 0), 0.99);
   }
@@ -1160,15 +1015,17 @@ function animate(currentTime = 0) {
       if (params.pulseIntensity > 0) {
         // Calculate pulse (based on time and position)
         const pulse =
-          Math.sin(time * params.pulseSpeed + ring.userData.index * 0.2) *
+          Math.sin(time * params.pulseSpeed + i * 0.2) *
           params.pulseIntensity;
 
-        // Apply pulse to emission intensity
-        const baseEmission = params.emission;
-        const emissionColor = ring.material.color
-          .clone()
-          .multiplyScalar(baseEmission * (1 + pulse));
-        ring.material.emissive.copy(emissionColor);
+        // Only apply emission logic if material has color and emissive
+        if (ring.material.color && ring.material.emissive) {
+          const baseEmission = params.emission;
+          const emissionColor = ring.material.color
+            .clone()
+            .multiplyScalar(baseEmission * (1 + pulse));
+          ring.material.emissive.copy(emissionColor);
+        }
       }
 
       // Add subtle rotation to each ring
@@ -1177,7 +1034,7 @@ function animate(currentTime = 0) {
           params.rotationSpeed *
           deltaTime *
           60 *
-          (1 + Math.sin(ring.userData.index * 0.1) * 0.5);
+          (1 + Math.sin(i * 0.1) * 0.5);
       }
     });
   }
@@ -1649,61 +1506,60 @@ window.addEventListener("resize", () => {
 // Start animation
 animate();
 
-function createTunnelEndParticles() {
-  if (tunnelEndParticles) {
-    tunnelEndParticlesGroup.remove(tunnelEndParticles);
-    tunnelEndParticles.geometry.dispose();
-    tunnelEndParticles.material.dispose();
-    tunnelEndParticles = null;
+// Remove old scrollProgress logic and ScrollTrigger
+// ... existing code ...
+// Add this instead:
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY;
+  const maxScroll = document.body.scrollHeight - window.innerHeight;
+  const scrollProgress = maxScroll > 0 ? scrollY / maxScroll : 0;
+  const percentage = Math.round(scrollProgress * 100);
+
+  let narrationIndex = 0;
+  if (percentage < 20) {
+    narrationIndex = 0;
+  } else if (percentage < 40) {
+    narrationIndex = 1;
+  } else if (percentage < 60) {
+    narrationIndex = 2;
+  } else if (percentage < 90) {
+    narrationIndex = 3;
+  } else {
+    narrationIndex = 4; // CTA
   }
-  const count = 120;
-  tunnelEndParticlesGeometry = new THREE.BufferGeometry();
-  const positions = new Float32Array(count * 3);
-  const colors = new Float32Array(count * 3);
-  const sizes = new Float32Array(count);
-  for (let i = 0; i < count; i++) {
-    // Spread particles in a much larger sphere to fill the last slide
-    const r = 4 + Math.random() * 8;
-    const theta = Math.random() * 2 * Math.PI;
-    const phi = Math.acos(2 * Math.random() - 1);
-    const x = r * Math.sin(phi) * Math.cos(theta);
-    const y = r * Math.sin(phi) * Math.sin(theta);
-    const z = r * Math.cos(phi);
-    positions[i * 3] = x;
-    positions[i * 3 + 1] = y;
-    positions[i * 3 + 2] = z;
-    // Gold, Red, White
-    const colorType = Math.random();
-    if (colorType < 0.5) {
-      // Gold
-      colors[i * 3] = 1; colors[i * 3 + 1] = 0.85; colors[i * 3 + 2] = 0.3;
-    } else if (colorType < 0.8) {
-      // Red
-      colors[i * 3] = 1; colors[i * 3 + 1] = 0.2; colors[i * 3 + 2] = 0.2;
-    } else {
-      // White
-      colors[i * 3] = 1; colors[i * 3 + 1] = 1; colors[i * 3 + 2] = 1;
-    }
-    sizes[i] = 0.7 + Math.random() * 0.7;
+
+  updateNarrationByIndex(narrationIndex, scrollProgress);
+  narrationContainer.classList.add('visible');
+  titleContainer.classList.remove('visible');
+  window._scrollProgress = scrollProgress;
+});
+
+// Add this helper function:
+function updateNarrationByIndex(index, progress) {
+  // Update progress bar
+  const percentage = Math.round(progress * 100);
+  const progressBar = document.getElementById('progress-bar');
+  progressBar.style.width = `${percentage}%`;
+  const percentageElement = document.getElementById('progress-percentage');
+  if (percentageElement) {
+    percentageElement.textContent = `${percentage}%`;
   }
-  tunnelEndParticlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  tunnelEndParticlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  tunnelEndParticlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-  tunnelEndParticlesMaterial = new THREE.PointsMaterial({
-    size: 0.9,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.95,
-    map: createStarTexture(),
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-  tunnelEndParticles = new THREE.Points(tunnelEndParticlesGeometry, tunnelEndParticlesMaterial);
-  tunnelEndParticlesGroup.add(tunnelEndParticles);
-  tunnelEndParticlesGroup.visible = false;
+  // Set narration
+  const currentPoint = params.narrationPoints[index];
+  narrationText.innerHTML = currentPoint.text;
+  // Show/hide narration container
+  narrationContainer.classList.add('visible');
+  // Add cta-active class for last section
+  if (index === params.narrationPoints.length - 1) {
+    narrationText.classList.add('cta-active');
+  } else {
+    narrationText.classList.remove('cta-active');
+  }
+  // Update narration image for mobile
+  updateNarrationImageForMobile();
 }
 
-// Add this JS after DOMContentLoaded or at the end of the script:
+// Restore updateNarrationImageForMobile for narration image swapping
 function updateNarrationImageForMobile() {
   const img = document.getElementById('narration-img-main');
   if (!img) return;
@@ -1714,7 +1570,83 @@ function updateNarrationImageForMobile() {
   }
 }
 window.addEventListener('resize', updateNarrationImageForMobile);
-document.addEventListener('DOMContentLoaded', updateNarrationImageForMobile);
+document.addEventListener('DOMContentLoaded', () => {
+  updateNarrationImageForMobile();
+  updateNarrationByIndex(0, 0);
+});
+
+function createTunnel() {
+  // Remove previous tunnel
+  scene.remove(tunnelGroup);
+  tunnelGroup = new THREE.Group();
+  scene.add(tunnelGroup);
+
+  // Update path
+  tunnelPath = createPath();
+
+  // Create particle system
+  createParticles();
+
+  // Create star field (background only, no warp)
+  createStarField();
+
+  // Create tunnel end particles
+  createTunnelEndParticles();
+
+  // Restore tunnel ring creation
+  const colorA = new THREE.Color(params.colorA);
+  const colorB = new THREE.Color(params.colorB);
+  const colorC = new THREE.Color(params.colorC);
+  const colorD = new THREE.Color(params.colorD);
+  const geometry = getTorusGeometry(
+    params.tunnelRadius,
+    params.tubeThickness,
+    params.tubeSegments,
+    params.circleSegments
+  );
+  for (let i = 0; i < params.circleCount; i++) {
+    const t = i / (params.circleCount - 1);
+    const pathPoint = tunnelPath.getPointAt(t);
+    let color;
+    if (t < 0.25) {
+      color = new THREE.Color().lerpColors(colorA, colorB, t * 4);
+    } else if (t < 0.5) {
+      color = new THREE.Color().lerpColors(colorB, colorC, (t - 0.25) * 4);
+    } else if (t < 0.75) {
+      color = new THREE.Color().lerpColors(colorC, colorD, (t - 0.5) * 4);
+    } else {
+      color = colorD.clone().multiplyScalar(1 - (t - 0.75) * 0.5);
+    }
+    const material = new THREE.MeshStandardMaterial({
+      color: color,
+      emissive: color.clone().multiplyScalar(params.emission),
+      metalness: params.metalness,
+      roughness: params.roughness,
+      transparent: true
+    });
+    const torus = new THREE.Mesh(geometry, material);
+    const tangent = tunnelPath.getTangentAt(t);
+    torus.position.copy(pathPoint);
+    if (Math.abs(tangent.y) < 0.99) {
+      torus.lookAt(
+        pathPoint.x + tangent.x,
+        pathPoint.y + tangent.y,
+        pathPoint.z + tangent.z
+      );
+    }
+    torus.userData = {
+      initialPositionZ: torus.position.z,
+      index: i,
+      t: t
+    };
+    tunnelGroup.add(torus);
+  }
+
+  console.log('Tunnel rings:', tunnelGroup.children.length);
+}
+
+// Ensure the tunnel is created on load
+createTunnel();
 
   </script>
 </body>
