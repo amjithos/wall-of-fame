@@ -45,7 +45,7 @@ body {
   position: relative;
 }
 
-/* Animated noise effect */
+/* Remove grain effect */
 body::before {
   content: "";
   position: fixed;
@@ -53,60 +53,11 @@ body::before {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: transparent
-    url("https://assets.iceable.com/img/noise-transparent.png") repeat 0 0;
-  background-size: 300px 300px;
-  animation: noise-animation 0.3s steps(5) infinite;
-  opacity: 0.9;
+  background: transparent;
+  opacity: 0;
   will-change: transform;
   z-index: 100;
   pointer-events: none;
-}
-
-@keyframes noise-animation {
-  0% {
-    transform: translate(0, 0);
-  }
-
-  10% {
-    transform: translate(-2%, -3%);
-  }
-
-  20% {
-    transform: translate(-4%, 2%);
-  }
-
-  30% {
-    transform: translate(2%, -4%);
-  }
-
-  40% {
-    transform: translate(-2%, 5%);
-  }
-
-  50% {
-    transform: translate(-4%, 2%);
-  }
-
-  60% {
-    transform: translate(3%, 0);
-  }
-
-  70% {
-    transform: translate(0, 3%);
-  }
-
-  80% {
-    transform: translate(-3%, 0);
-  }
-
-  90% {
-    transform: translate(2%, 2%);
-  }
-
-  100% {
-    transform: translate(1%, 0);
-  }
 }
 
 /* Key hint styling */
@@ -272,38 +223,6 @@ h3 {
   width: 100%;
   padding: 10px;
   z-index: 2;
-}
-
-/* Project title needs to be above everything */
-.project-title {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  text-align: center;
-  pointer-events: none;
-  z-index: 10002;
-  /* Increased to be above expanded-item */
-}
-
-.project-title p {
-  position: relative;
-  height: 42px;
-  color: #ffffff;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
-  overflow: hidden;
-}
-
-.project-title p .word {
-  position: relative;
-  display: inline-block;
-  font-family: "PP Neue Montreal", sans-serif;
-  font-size: 36px;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
-  transform: translateY(0%);
-  will-change: transform;
 }
 
 .item-name {
@@ -651,11 +570,6 @@ h3 {
   }
 }
 
-/* Hide project-title when zoomed card is open */
-.zoomed-open .project-title {
-  display: none !important;
-}
-
 /* Drag overlay styles */
 .drag-overlay {
   position: fixed;
@@ -715,10 +629,6 @@ h3 {
     <div class="container">
       <div class="canvas" id="canvas"></div>
       <div class="overlay" id="overlay"></div>
-    </div>
-
-    <div class="project-title">
-      <p></p>
     </div>
 
     <!-- Page vignette effects -->
@@ -801,7 +711,7 @@ const settings = {
   expandedScale: 0.45,
   dragEase: 0.06,
   momentumFactor: 180,
-  zoomDuration: 1.1,
+  zoomDuration: 0.2,
   bufferZone: 1,
   borderRadius: 7,
   vignetteSize: 26,
@@ -896,18 +806,6 @@ function resetDragOverlayTimer() {
 // Remove mousemove/touchmove as triggers
 // Show overlay on load
 showDragOverlay();
-
-function setAndAnimateTitle(title) {
-  if (titleSplit) titleSplit.revert();
-  projectTitleElement.textContent = title;
-  titleSplit = new SplitType(projectTitleElement, {
-    types: "words"
-  });
-  gsap.set(titleSplit.words, {
-    y: "100%"
-  });
-  projectTitleElement.style.willChange = 'transform, opacity';
-}
 
 function animateTitleIn() {
   gsap.fromTo(
@@ -1074,66 +972,9 @@ function expandItem(item, itemIndex) {
   container.style.cursor = "auto";
   // Use unique expanded image
   let imgSrc = expandedImageUrls[itemIndex % expandedImageUrls.length] || item.querySelector("img").src;
-  const titleIndex = itemIndex % items.length;
   const itemWidth = parseInt(item.dataset.width);
   const itemHeight = parseInt(item.dataset.height);
-  const category = items[titleIndex];
-  
-  setAndAnimateTitle(items[titleIndex]);
-  // Get the caption elements
-  const nameElement = item.querySelector(".item-name");
-  const numberElement = item.querySelector(".item-number");
-  // Store original text content for later use
-  const nameText = nameElement.textContent;
-  const numberText = numberElement.textContent;
-  // Create a direct clone of the caption elements for animation
-  const captionClone = item.querySelector(".item-caption").cloneNode(true);
-  captionClone.classList.add("caption-clone");
-  captionClone.style.willChange = 'transform, opacity';
-  // Hide the original caption immediately
-  item.querySelector(".item-caption").style.opacity = "0";
-  // Apply SplitType to the cloned elements - use words for both
-  const nameClone = captionClone.querySelector(".item-name");
-  const numberClone = captionClone.querySelector(".item-number");
-  const nameCloneSplit = new SplitType(nameClone, {
-    types: "words"
-  });
-  const numberCloneSplit = new SplitType(numberClone, {
-    types: "words"
-  });
-  // Animate the clone out with clear text movement
-  requestAnimationFrame(() => {
-    gsap.to(nameCloneSplit.words, {
-      y: "100%",
-      opacity: 0,
-      duration: 0.3,
-      stagger: 0.02,
-      ease: "power1.out"
-    });
-    gsap.to(numberCloneSplit.words, {
-      y: "100%",
-      opacity: 0,
-      duration: 0.3,
-      stagger: 0.01,
-      delay: 0.02,
-      ease: "power1.out",
-      onComplete: () => {
-        if (captionClone.parentNode) {
-          document.body.removeChild(captionClone);
-        }
-      }
-    });
-  });
-  const rect = item.getBoundingClientRect();
-  originalPosition = {
-    id: item.id,
-    rect: rect,
-    imgSrc: imgSrc,
-    width: itemWidth,
-    height: itemHeight,
-    nameText: nameText,
-    numberText: numberText
-  };
+  const category = items[itemIndex % items.length];
   // Add active class to overlay but animate opacity with GSAP
   overlay.classList.add("active");
   animateOverlayIn();
@@ -1141,7 +982,7 @@ function expandItem(item, itemIndex) {
   expandedItem.className = "expanded-item";
   expandedItem.style.width = `${itemWidth}px`;
   expandedItem.style.height = `${itemHeight}px`;
-  expandedItem.style.zIndex = "10000"; // Explicitly set z-index
+  expandedItem.style.zIndex = "10000";
   expandedItem.style.borderRadius = `var(--border-radius, 0px)`;
   expandedItem.style.willChange = 'transform, opacity';
   // Use unique expanded image
@@ -1187,14 +1028,13 @@ function expandItem(item, itemIndex) {
   const targetWidth = viewportWidth * settings.expandedScale;
   // Use a fixed aspect ratio of 4:5 for all expanded items
   const targetHeight = targetWidth * (5/4);
-  gsap.delayedCall(0.5, animateTitleIn);
   gsap.fromTo(
     expandedItem,
     {
       width: itemWidth,
       height: itemHeight,
-      x: rect.left + itemWidth / 2 - window.innerWidth / 2,
-      y: rect.top + itemHeight / 2 - window.innerHeight / 2
+      x: item.getBoundingClientRect().left + itemWidth / 2 - window.innerWidth / 2,
+      y: item.getBoundingClientRect().top + itemHeight / 2 - window.innerHeight / 2
     },
     {
       width: targetWidth,
@@ -1202,36 +1042,24 @@ function expandItem(item, itemIndex) {
       x: 0,
       y: 0,
       duration: settings.zoomDuration,
-      ease: "hop"
+      ease: 'bounce.out'
     }
   );
+  // Restore originalPosition assignment for closing
+  const rect = item.getBoundingClientRect();
+  originalPosition = {
+    id: item.id,
+    rect: rect,
+    imgSrc: imgSrc,
+    width: itemWidth,
+    height: itemHeight
+  };
 }
 
 function closeExpandedItem() {
   if (!expandedItem || !originalPosition) return;
-  animateTitleOut();
-  animateOverlayOut();
-  // Fade in other items with GSAP
-  document.querySelectorAll(".item").forEach((el) => {
-    if (el.id !== activeItemId) {
-      gsap.to(el, {
-        opacity: 1,
-        duration: settings.overlayEaseDuration,
-        delay: 0.3,
-        ease: "power1.out"
-      });
-    }
-  });
+  // Animate out with width/height/x/y for smoothness
   const originalItem = document.getElementById(activeItemId);
-  if (originalItem) {
-    const nameElement = originalItem.querySelector(".item-name");
-    const numberElement = originalItem.querySelector(".item-number");
-    // Reset the text content to ensure clean animation
-    nameElement.textContent = originalPosition.nameText;
-    numberElement.textContent = originalPosition.numberText;
-    // Keep the caption hidden until animation completes
-    originalItem.querySelector(".item-caption").style.opacity = "0";
-  }
   const originalRect = originalPosition.rect;
   const originalWidth = originalPosition.width;
   const originalHeight = originalPosition.height;
@@ -1240,75 +1068,10 @@ function closeExpandedItem() {
     height: originalHeight,
     x: originalRect.left + originalWidth / 2 - window.innerWidth / 2,
     y: originalRect.top + originalHeight / 2 - window.innerHeight / 2,
-    duration: settings.zoomDuration, // Use the faster zoom duration
-    ease: "hop",
+    duration: 0.12,
+    ease: 'power1.inOut',
     onComplete: () => {
-      // Create the caption animation BEFORE removing the expanded item
-      if (originalItem) {
-        // Create a clone for animation
-        const captionElement = originalItem.querySelector(".item-caption");
-        const captionClone = document.createElement("div");
-        captionClone.className = "caption-clone";
-        captionClone.innerHTML = captionElement.innerHTML;
-        captionClone.style.position = "fixed";
-        captionClone.style.left = `${originalRect.left}px`;
-        captionClone.style.bottom = `${window.innerHeight - originalRect.bottom}px`;
-        captionClone.style.width = `${originalRect.width}px`;
-        captionClone.style.padding = "10px";
-        captionClone.style.zIndex = "10002";
-        captionClone.style.willChange = 'transform, opacity';
-        document.body.appendChild(captionClone);
-        // Apply SplitType to the cloned elements
-        const nameClone = captionClone.querySelector(".item-name");
-        const numberClone = captionClone.querySelector(".item-number");
-        nameClone.style.overflow = "hidden";
-        numberClone.style.overflow = "hidden";
-        const nameCloneSplit = new SplitType(nameClone, {
-          types: "words"
-        });
-        const numberCloneSplit = new SplitType(numberClone, {
-          types: "words"
-        });
-        // Set initial position for animation - start from below
-        gsap.set(nameCloneSplit.words, {
-          y: "100%",
-          opacity: 0
-        });
-        gsap.set(numberCloneSplit.words, {
-          y: "100%",
-          opacity: 0
-        });
-        // Animate the clone in with clear staggered animation
-        requestAnimationFrame(() => {
-          gsap.to(nameCloneSplit.words, {
-            y: "0%",
-            opacity: 1,
-            duration: 0.3,
-            stagger: 0.02,
-            ease: "power1.out"
-          });
-          gsap.to(numberCloneSplit.words, {
-            y: "0%",
-            opacity: 1,
-            duration: 0.3,
-            stagger: 0.01,
-            delay: 0.02,
-            ease: "power1.out",
-            onComplete: () => {
-              captionElement.style.opacity = "1";
-              if (captionClone.parentNode) {
-                document.body.removeChild(captionClone);
-              }
-            }
-          });
-        });
-      }
-      if (expandedItem && expandedItem.parentNode) {
-        expandedItem.parentNode.removeChild(expandedItem);
-      }
-      if (originalItem) {
-        originalItem.style.visibility = "visible";
-      }
+      if (expandedItem.parentNode) expandedItem.parentNode.removeChild(expandedItem);
       expandedItem = null;
       isExpanded = false;
       activeItem = null;
@@ -1318,8 +1081,10 @@ function closeExpandedItem() {
       container.style.cursor = "grab";
       dragVelocityX = 0;
       dragVelocityY = 0;
-      // Remove active class from overlay after animation completes
+      document.querySelectorAll(".item").forEach((el) => (el.style.opacity = 1));
       overlay.classList.remove("active");
+      overlay.style.opacity = 0;
+      overlay.style.pointerEvents = 'none';
       document.body.classList.remove('zoomed-open');
     }
   });
