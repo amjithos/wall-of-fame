@@ -61,12 +61,14 @@
       opacity: 0;
       visibility: hidden;
       transition: opacity 1.2s ease, visibility 0s 1.2s;
+      pointer-events: none;
     }
 
     .title-container.visible {
       opacity: 1;
       visibility: visible;
       transition: opacity 1.2s ease, visibility 0s;
+      pointer-events: auto;
     }
 
     /* Typography */
@@ -155,7 +157,7 @@
       transform: translate(-50%, -50%);
       width: 90%;
       max-width: 800px;
-      z-index: 200;
+      z-index: 199;
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.5s ease;
@@ -164,11 +166,13 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      pointer-events: none;
     }
 
     .narration-container.visible {
       opacity: 1;
       visibility: visible;
+      pointer-events: auto;
     }
 
     .narration-text {
@@ -289,6 +293,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      z-index: 201;
     }
     .button__wrapper {
       position: relative;
@@ -304,7 +309,7 @@
       transform: translate(-50%, -50%);
       width: 100%;
       height: 100%;
-      z-index: 2;
+      z-index: 202;
       padding: 8px;
       font-size: 20px;
       border: 2px solid rgb(243 197 48 / 70%);
@@ -315,6 +320,7 @@
       transition: box-shadow 0.5s;
       font-family: inherit;
       border-radius: 60px;
+      pointer-events: auto;
     }
     .pulsing {
       width: 99%;
@@ -438,6 +444,8 @@
   <!-- GSAP and ScrollTrigger -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <!-- Add GSAP ScrollToPlugin CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
 
   <!-- Main Script -->
   <script type="module">
@@ -449,8 +457,8 @@ import { EffectComposer } from "https://esm.sh/three@0.175.0/examples/jsm/postpr
 import { RenderPass } from "https://esm.sh/three@0.175.0/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "https://esm.sh/three@0.175.0/examples/jsm/postprocessing/UnrealBloomPass.js";
 
-// Register ScrollTrigger
-gsap.registerPlugin(ScrollTrigger);
+// Register ScrollTrigger and ScrollToPlugin
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 // Detect device capabilities for performance optimization
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -503,12 +511,12 @@ const colorPresets = {
 // Parameters
 const params = {
   // Structure
-  tunnelDepth: 50,
-  circleCount: 100,
+  tunnelDepth: 30,
+  circleCount: 60,
   tunnelRadius: 3,
   tubeThickness: 0.5,
-  circleSegments: 128,
-  tubeSegments: 8,
+  circleSegments: 64,
+  tubeSegments: 6,
   pathAmplitude: 0.5,
 
   // Appearance
@@ -527,13 +535,13 @@ const params = {
   pulseIntensity: 0.8,
   rotationSpeed: 0.011,
   particlesEnabled: true,
-  particleCount: 1000,
+  particleCount: 500,
   particleSize: 0.04,
   particleSpeed: 0.5,
 
   // Stars
   starsEnabled: true,
-  starCount: 2000,
+  starCount: 1000,
   starSize: 0.05,
 
   // Movement
@@ -573,15 +581,11 @@ const params = {
     },
     {
       progress: 0.18,
-      text: `<img src="svg/text2.png" alt="Narration 2" style="max-width:80vw;max-height:25vh;display:block;margin:0 auto;" />`
-    },
-    {
-      progress: 0.35,
-      text: `<img src="svg/text3.png" alt="Narration 3" style="max-width:80vw;max-height:25vh;display:block;margin:0 auto;" />`
+      text: `<img src="svg/text2.png" alt="Narration 2" style="max-width:80vw;max-height:35vh;display:block;margin:0 auto;" />`
     },
     {
       progress: 0.52,
-      text: `<img src="svg/text4.png" alt="Narration 4" style="max-width:80vw;max-height:30vh;display:block;margin:0 auto;" />`
+      text: `<div style="display:flex;justify-content:center;align-items:center;height:100vh;width:100%;"><img src="svg/text4.png" alt="Narration 4" style="max-width:80vw;max-height:25vh;display:block;" /></div>`
     },
     {
       progress: 0.95,
@@ -615,7 +619,7 @@ const renderer = new THREE.WebGLRenderer({
   powerPreference: "high-performance"
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(isLowEndDevice ? 1 : window.devicePixelRatio || 1);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
 
@@ -627,9 +631,9 @@ composer.addPass(renderPass);
 // Add bloom effect
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  1.5, // Bloom strength
-  0.75, // Bloom radius
-  0.2 // Bloom threshold
+  1.2, // Bloom strength
+  0.5, // Bloom radius
+  0.3 // Bloom threshold
 );
 composer.addPass(bloomPass);
 
@@ -887,7 +891,8 @@ function createParticles() {
     opacity: 0.6,
     map: createParticleTexture(),
     blending: THREE.AdditiveBlending,
-    depthWrite: false
+    depthWrite: false,
+    alphaTest: 0.01
   });
 
   particles = new THREE.Points(particleGeo, particleMaterial);
@@ -954,174 +959,182 @@ function createTunnelEndParticles() {
   tunnelEndParticlesGroup.visible = false;
 }
 
-// Animation and scroll handling
-let scrollProgress = 0;
+// Add these constants at the top
+const FRAME_HEIGHT = window.innerHeight;
+const SCROLL_SPEED = 0.8;
+let isScrolling = false;
+let currentFrame = 0;
+const totalFrames = 4;
+let time = 0;
 let lastFrameTime = 0;
 let deltaTime = 0;
+let animationFrameId;
 
-// Get title container element
+// Add easing constants
+const EASE_DURATION = 1.2; // Duration of the ease in seconds
+const EASE_TYPE = "power2.inOut"; // Smooth ease in and out
+
+// Apple-style smooth scroll variables
+let targetFrame = 0;
+let currentFrameSmooth = 0;
+const LERP_FACTOR_NORMAL = 0.12; // Normal speed
+const LERP_FACTOR_SLOW = 0.015;  // Even slower, smoother motion for CTA arrival
+
+// Get DOM elements
 const titleContainer = document.getElementById("title-container");
-let titleVisible = false;
-
-// Get narration elements
 const narrationContainer = document.getElementById("narration-container");
 const narrationText = document.getElementById("narration-text");
 const progressBar = document.getElementById("progress-bar");
 
-// Animation loop
-let time = 0;
-let animationFrameId;
+// Create tunnel
+createTunnel();
 
+// Animation loop
 function animate(currentTime = 0) {
   stats.begin();
 
-  // Calculate delta time for smooth animations regardless of frame rate
-  deltaTime = Math.min(0.05, (currentTime - lastFrameTime) / 1000); // Cap at 0.05 (20fps minimum)
+  deltaTime = Math.min(0.05, (currentTime - lastFrameTime) / 1000);
   lastFrameTime = currentTime;
-
   time += deltaTime;
 
-  // Use unified scrollProgress
-  let pathProgress = typeof window._scrollProgress === 'number' ? window._scrollProgress : 0;
-  if (params.autoMovement) {
-    pathProgress = Math.min(pathProgress * params.scrollSpeed, 0.99);
-  } else {
-    pathProgress = Math.min(Math.max(params.manualPosition, 0), 0.99);
+  // Lerp currentFrameSmooth toward targetFrame
+  let lerpFactor = LERP_FACTOR_NORMAL;
+  if (currentFrameSmooth >= 2 && currentFrameSmooth < 3 && targetFrame === 3) {
+    lerpFactor = LERP_FACTOR_SLOW;
+  }
+  currentFrameSmooth += (targetFrame - currentFrameSmooth) * lerpFactor;
+
+  // Snap to target if close enough
+  if (Math.abs(currentFrameSmooth - targetFrame) < 0.01) {
+    currentFrameSmooth = targetFrame;
+    isScrolling = false;
   }
 
+  // Calculate tunnel progress based on currentFrameSmooth
+  const pathProgress = currentFrameSmooth / (totalFrames - 1);
   const position = tunnelPath.getPointAt(pathProgress);
-
-  // Set camera position
   camera.position.copy(position);
-
-  // Look ahead
-  const lookAtPosition = tunnelPath.getPointAt(
-    Math.min(pathProgress + 0.01, 0.99)
-  );
+  const lookAtPosition = tunnelPath.getPointAt(Math.min(pathProgress + 0.01, 0.99));
   camera.lookAt(lookAtPosition);
+
+  // Update narration and progress bar based on rounded frame
+  const roundedFrame = Math.round(currentFrameSmooth);
+  updateNarrationByIndex(roundedFrame, pathProgress);
 
   // Move lights with camera
   light1.position.copy(camera.position);
   light1.position.z += 3;
 
-  // Animate rings (subtle pulsing and rotation)
+  // Optimize ring animation by only processing visible rings
   if (params.pulseIntensity > 0 || params.rotationSpeed > 0) {
-    // Only process visible rings for optimization
-    tunnelGroup.children.forEach((ring, i) => {
-      // Skip rings that are too far from camera
+    const visibleRings = tunnelGroup.children.filter(ring => {
       const distanceToCamera = camera.position.distanceTo(ring.position);
-      if (distanceToCamera > params.tunnelDepth * 0.5) return;
-
+      return distanceToCamera <= params.tunnelDepth * 0.5;
+    });
+    visibleRings.forEach((ring, i) => {
       if (params.pulseIntensity > 0) {
-        // Calculate pulse (based on time and position)
-        const pulse =
-          Math.sin(time * params.pulseSpeed + i * 0.2) *
-          params.pulseIntensity;
-
-        // Only apply emission logic if material has color and emissive
+        const pulse = Math.sin(time * params.pulseSpeed + i * 0.2) * params.pulseIntensity;
         if (ring.material.color && ring.material.emissive) {
           const baseEmission = params.emission;
-          const emissionColor = ring.material.color
-            .clone()
-            .multiplyScalar(baseEmission * (1 + pulse));
+          const emissionColor = ring.material.color.clone().multiplyScalar(baseEmission * (1 + pulse));
           ring.material.emissive.copy(emissionColor);
         }
       }
-
-      // Add subtle rotation to each ring
       if (params.rotationSpeed > 0) {
-        ring.rotation.z +=
-          params.rotationSpeed *
-          deltaTime *
-          60 *
-          (1 + Math.sin(i * 0.1) * 0.5);
+        ring.rotation.z += params.rotationSpeed * deltaTime * 60 * (1 + Math.sin(i * 0.1) * 0.5);
       }
     });
   }
 
-  // Animate particles
-  if (particles && params.particlesEnabled) {
-    const positions = particles.geometry.attributes.position.array;
-    const initialPositions = particles.userData.initialPositions;
-    const velocities = particles.userData.velocities;
-
-    // Update particle positions - batch process for performance
-    for (let i = 0; i < params.particleCount; i++) {
-      const idx = i * 3;
-      const vIdx = i * 3;
-
-      // Move particles slowly
-      positions[idx] +=
-        velocities[vIdx] * params.particleSpeed * deltaTime * 60;
-      positions[idx + 1] +=
-        velocities[vIdx + 1] * params.particleSpeed * deltaTime * 60;
-      positions[idx + 2] +=
-        velocities[vIdx + 2] * params.particleSpeed * deltaTime * 60;
-
-      // Reset particles that get too far from their original position
-      const dx = positions[idx] - initialPositions[idx];
-      const dy = positions[idx + 1] - initialPositions[idx + 1];
-      const dz = positions[idx + 2] - initialPositions[idx + 2];
-      const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-      if (distance > 1.0) {
-        // Reset with new velocity
-        positions[idx] = initialPositions[idx];
-        positions[idx + 1] = initialPositions[idx + 1];
-        positions[idx + 2] = initialPositions[idx + 2];
-        velocities[vIdx] = (Math.random() - 0.5) * 0.01;
-        velocities[vIdx + 1] = (Math.random() - 0.5) * 0.01;
-        velocities[vIdx + 2] = (Math.random() - 0.5) * 0.01;
-      }
-    }
-
-    particles.geometry.attributes.position.needsUpdate = true;
+  // Calculate tunnel fade (1 = fully visible, 0 = fully faded)
+  let tunnelFade = 1;
+  let narrationFade = 1;
+  if (roundedFrame === totalFrames - 1) {
+    tunnelFade = 0;
+    narrationFade = 0;
   }
 
-  // Handle fade to black at end
-  if (pathProgress > params.fadeStart) {
+  // Apply tunnelFade to tunnel rings
+  for (let i = 0; i < tunnelGroup.children.length; i++) {
+    const ring = tunnelGroup.children[i];
+    if (ring.material) {
+      ring.material.opacity = tunnelFade;
+      ring.material.transparent = tunnelFade < 1;
+      ring.material.depthWrite = tunnelFade === 1;
+      ring.material.needsUpdate = true;
+    }
+  }
+  // Apply tunnelFade to particles
+  if (particles && particles.material) {
+    particles.material.opacity = 0.6 * tunnelFade;
+    particles.material.transparent = tunnelFade < 1;
+    particles.material.depthWrite = tunnelFade === 1;
+    particles.material.needsUpdate = true;
+  }
+  // Fade fog in sync with tunnel
+  scene.fog.density = params.fogDensity * tunnelFade;
+
+  // Fade to black at end (only set background to black when fully faded)
+  if (tunnelFade === 0) {
+    renderer.setClearColor(0x000000, 1);
     document.body.classList.add('bg-end');
-    // Do NOT hide #container or canvas at the end
-    document.getElementById('container').style.opacity = 1;
-    document.getElementById('container').style.display = '';
-    document.querySelectorAll('canvas').forEach(c => c.style.display = '');
-    renderer.setClearColor(0x000000, 0); // transparent
-    scene.fog.density = params.fogDensity * (1 - Math.min(1, (pathProgress - params.fadeStart) / (1 - params.fadeStart)));
   } else {
     document.body.classList.remove('bg-end');
-    document.getElementById('container').style.opacity = 1;
-    document.getElementById('container').style.display = '';
-    document.querySelectorAll('canvas').forEach(c => c.style.display = '');
-    renderer.setClearColor(0x282828, 1); // or your default color
-    scene.fog.density = params.fogDensity;
+    renderer.setClearColor(0x282828, 1);
   }
 
-  // Show/hide and animate tunnel end particles
-  if (pathProgress > 0.99) {
-    tunnelEndParticlesGroup.visible = true;
-    tunnelEndParticlesGroup.position.copy(camera.position);
-    tunnelEndParticlesGroup.children.forEach(points => {
-      const pos = points.geometry.attributes.position;
-      for (let i = 0; i < pos.count; i++) {
-        pos.array[i * 3] += (mouse.x * 1.2 - pos.array[i * 3]) * 0.05;
-        pos.array[i * 3 + 1] += (mouse.y * 1.2 - pos.array[i * 3 + 1]) * 0.05;
+  // Only fade in CTA, no fade out for last text
+  const narrationTextEl = document.getElementById('narration-text');
+  if (narrationTextEl) {
+    // Fade out text4.png over 1s as you approach the CTA
+    if (
+      roundedFrame === totalFrames - 2 &&
+      narrationTextEl.innerHTML.includes('text4.png')
+    ) {
+      // Fade out as you approach the last frame
+      let fade = 1;
+      if (currentFrameSmooth > totalFrames - 2) {
+        fade = 1 - Math.min(1, currentFrameSmooth - (totalFrames - 2));
       }
-      pos.needsUpdate = true;
-    });
-    
-    // Hide overlays to show particles
-    document.querySelectorAll('.title-container, .narration-container, .cta-btn').forEach(el => {
-      el.style.display = 'none';
-    });
-  } else {
-    tunnelEndParticlesGroup.visible = false;
-    // Restore overlays
-    document.querySelectorAll('.title-container, .narration-container, .cta-btn').forEach(el => {
-      el.style.display = '';
-    });
+      narrationTextEl.style.opacity = fade;
+      narrationTextEl.style.transition = 'opacity 1s cubic-bezier(0.4,0,0.2,1)';
+    } else if (roundedFrame === totalFrames - 1) {
+      narrationTextEl.style.opacity = 0;
+      narrationTextEl.style.transition = '';
+    } else {
+      narrationTextEl.style.opacity = 1;
+      narrationTextEl.style.transition = '';
+    }
+  }
+  const ctaBtn = document.querySelector('.button-pulse');
+  if (ctaBtn) {
+    if (roundedFrame === totalFrames - 1 || currentFrameSmooth >= totalFrames - 1) {
+      ctaBtn.style.opacity = 1;
+      ctaBtn.style.pointerEvents = 'auto';
+      ctaBtn.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1)';
+    } else if (currentFrameSmooth >= totalFrames - 2) {
+      // Fade in as you approach the last frame
+      let fade = Math.min(1, currentFrameSmooth - (totalFrames - 2));
+      ctaBtn.style.opacity = fade;
+      ctaBtn.style.pointerEvents = fade > 0.95 ? 'auto' : 'none';
+      ctaBtn.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1)';
+    } else {
+      ctaBtn.style.opacity = 0;
+      ctaBtn.style.pointerEvents = 'none';
+      ctaBtn.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1)';
+    }
   }
 
-  // Render with or without bloom based on settings
+  // Update title container visibility
+  if (titleContainer) {
+    if (roundedFrame === totalFrames - 1 || currentFrameSmooth >= totalFrames - 1) {
+      titleContainer.classList.add('visible');
+    } else {
+      titleContainer.classList.remove('visible');
+    }
+  }
+
+  // Render
   if (params.useBloom) {
     composer.render();
   } else {
@@ -1131,6 +1144,82 @@ function animate(currentTime = 0) {
   stats.end();
   animationFrameId = requestAnimationFrame(animate);
 }
+
+// Function to update narration
+function updateNarrationByIndex(index, progress) {
+  // Update progress bar
+  const percentage = Math.round(progress * 100);
+  progressBar.style.width = `${percentage}%`;
+  const percentageElement = document.getElementById('progress-percentage');
+  if (percentageElement) {
+    percentageElement.textContent = `${percentage}%`;
+  }
+
+  // Set narration
+  const currentPoint = params.narrationPoints[index];
+  if (currentPoint && currentPoint.text) {
+    narrationText.innerHTML = currentPoint.text;
+  }
+
+  // Show/hide narration container
+  narrationContainer.classList.add('visible');
+
+  // Add cta-active class for last section
+  if (index === params.narrationPoints.length - 1) {
+    narrationText.classList.add('cta-active');
+  } else {
+    narrationText.classList.remove('cta-active');
+  }
+
+  // Update narration image for mobile
+  updateNarrationImageForMobile();
+}
+
+// Update scrollToFrame to set targetFrame only
+function scrollToFrame(frameIndex) {
+  if (frameIndex < 0 || frameIndex >= totalFrames) return;
+  isScrolling = true;
+  targetFrame = frameIndex;
+}
+
+// Update wheel event listener for stepped scrolling
+window.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if (isScrolling) return;
+  if (e.deltaY > 0 && targetFrame < totalFrames - 1) {
+    scrollToFrame(targetFrame + 1);
+  } else if (e.deltaY < 0 && targetFrame > 0) {
+    scrollToFrame(targetFrame - 1);
+  }
+}, { passive: false });
+
+// Keyboard navigation
+window.addEventListener('keydown', (e) => {
+  if (isScrolling) return;
+  if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+    scrollToFrame(targetFrame + 1);
+  } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+    scrollToFrame(targetFrame - 1);
+  }
+});
+
+// Optimize scroll behavior
+document.body.style.overscrollBehavior = 'none';
+document.body.style.scrollSnapType = 'y mandatory';
+document.body.style.height = `${totalFrames * 100}vh`;
+document.body.style.overflow = 'hidden';
+
+// Initialize first frame and start animation
+scrollToFrame(0);
+animate();
+
+// Handle resize
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+});
 
 // Apply color preset
 function applyColorPreset(presetName) {
@@ -1494,70 +1583,6 @@ narrationTab
       pane.refresh();
     }
   });
-
-// Handle resize
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// Start animation
-animate();
-
-// Remove old scrollProgress logic and ScrollTrigger
-// ... existing code ...
-// Add this instead:
-window.addEventListener('scroll', () => {
-  const scrollY = window.scrollY;
-  const maxScroll = document.body.scrollHeight - window.innerHeight;
-  const scrollProgress = maxScroll > 0 ? scrollY / maxScroll : 0;
-  const percentage = Math.round(scrollProgress * 100);
-
-  let narrationIndex = 0;
-  if (percentage < 20) {
-    narrationIndex = 0;
-  } else if (percentage < 40) {
-    narrationIndex = 1;
-  } else if (percentage < 60) {
-    narrationIndex = 2;
-  } else if (percentage < 90) {
-    narrationIndex = 3;
-  } else {
-    narrationIndex = 4; // CTA
-  }
-
-  updateNarrationByIndex(narrationIndex, scrollProgress);
-  narrationContainer.classList.add('visible');
-  titleContainer.classList.remove('visible');
-  window._scrollProgress = scrollProgress;
-});
-
-// Add this helper function:
-function updateNarrationByIndex(index, progress) {
-  // Update progress bar
-  const percentage = Math.round(progress * 100);
-  const progressBar = document.getElementById('progress-bar');
-  progressBar.style.width = `${percentage}%`;
-  const percentageElement = document.getElementById('progress-percentage');
-  if (percentageElement) {
-    percentageElement.textContent = `${percentage}%`;
-  }
-  // Set narration
-  const currentPoint = params.narrationPoints[index];
-  narrationText.innerHTML = currentPoint.text;
-  // Show/hide narration container
-  narrationContainer.classList.add('visible');
-  // Add cta-active class for last section
-  if (index === params.narrationPoints.length - 1) {
-    narrationText.classList.add('cta-active');
-  } else {
-    narrationText.classList.remove('cta-active');
-  }
-  // Update narration image for mobile
-  updateNarrationImageForMobile();
-}
 
 // Restore updateNarrationImageForMobile for narration image swapping
 function updateNarrationImageForMobile() {
