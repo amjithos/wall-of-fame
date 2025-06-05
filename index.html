@@ -584,7 +584,7 @@ const params = {
       text: `<div style="display:flex;justify-content:center;align-items:center;height:100vh;width:100%;"><img src="svg/text4.png" alt="Narration 4" style="max-width:80vw;max-height:25vh;display:block;" /></div>`
     },
     {
-      progress: 0.95,
+      progress: 0.85,
       text: `<div class='button-pulse' style='margin-top: 0;'><div class='button__wrapper scale'><div class='pulsing'></div><a href='./pages/wall.html'><button id='continue-btn'>Click here to enter</button></a></div></div>`
     }
   ],
@@ -1213,6 +1213,11 @@ function scrollToFrame(frameIndex) {
   if (frameIndex < 0 || frameIndex >= totalFrames) return;
   isScrolling = true;
   targetFrame = frameIndex;
+  
+  // Add a small delay before allowing next scroll
+  setTimeout(() => {
+    isScrolling = false;
+  }, 500);
 }
 
 // Update wheel event listener for stepped scrolling
@@ -1228,16 +1233,22 @@ window.addEventListener('wheel', (e) => {
 
 // Add touch event handling
 let touchStartY = 0;
-let touchThreshold = 50; // Minimum distance for swipe
+let touchThreshold = 30; // Reduced threshold for better sensitivity
+let lastTouchTime = 0;
+const touchCooldown = 500; // Cooldown period in milliseconds
 
 window.addEventListener('touchstart', (e) => {
   e.preventDefault();
   touchStartY = e.touches[0].clientY;
+  lastTouchTime = Date.now();
 }, { passive: false });
 
 window.addEventListener('touchmove', (e) => {
   e.preventDefault();
   if (isScrolling) return;
+  
+  const currentTime = Date.now();
+  if (currentTime - lastTouchTime < touchCooldown) return;
   
   const touchY = e.touches[0].clientY;
   const deltaY = touchStartY - touchY;
@@ -1246,9 +1257,11 @@ window.addEventListener('touchmove', (e) => {
     if (deltaY > 0 && targetFrame < totalFrames - 1) {
       scrollToFrame(targetFrame + 1);
       touchStartY = touchY;
+      lastTouchTime = currentTime;
     } else if (deltaY < 0 && targetFrame > 0) {
       scrollToFrame(targetFrame - 1);
       touchStartY = touchY;
+      lastTouchTime = currentTime;
     }
   }
 }, { passive: false });
