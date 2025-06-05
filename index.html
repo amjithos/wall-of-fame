@@ -541,7 +541,7 @@ const params = {
   starSize: 0.05,
 
   // Movement
-  autoMovement: true,
+  autoMovement: false,
   manualPosition: 0,
   scrollSpeed: 1,
   fadeStart: 0.85,
@@ -1303,8 +1303,6 @@ const pane = new Pane({
 // Automatically set quality preset based on device
 if (isLowEndDevice) {
   applyQualityPreset("low");
-} else if (isMobile) {
-  applyQualityPreset("medium");
 } else {
   applyQualityPreset("high");
 }
