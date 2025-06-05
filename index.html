@@ -1004,29 +1004,9 @@ function animate(currentTime = 0) {
   lastFrameTime = currentTime;
   time += deltaTime;
 
-  // Optimize animation updates for mobile
-  if (isMobile) {
-    // Reduce update frequency for particles and effects
-    if (Math.random() > 0.5) {
-      updateParticles();
-    }
-  } else {
-    updateParticles();
-  }
-
-  // Lerp currentFrameSmooth toward targetFrame
-  let lerpFactor = LERP_FACTOR_NORMAL;
-  if (currentFrameSmooth >= 2 && currentFrameSmooth < 3 && targetFrame === 3) {
-    lerpFactor = LERP_FACTOR_SLOW;
-  }
-  currentFrameSmooth += (targetFrame - currentFrameSmooth) * lerpFactor;
-
-  // Snap to target if close enough
-  if (Math.abs(currentFrameSmooth - targetFrame) < 0.01) {
-    currentFrameSmooth = targetFrame;
-    isScrolling = false;
-  }
-
+  // Simpler lerp for smoother transitions
+  currentFrameSmooth += (targetFrame - currentFrameSmooth) * 0.1;
+  
   // Calculate tunnel progress based on currentFrameSmooth
   const pathProgress = currentFrameSmooth / (totalFrames - 1);
   const position = tunnelPath.getPointAt(pathProgress);
@@ -1208,48 +1188,22 @@ function updateNarrationByIndex(index, progress) {
   updateNarrationImageForMobile();
 }
 
-// Update scrollToFrame to set targetFrame only
+// Update scrollToFrame function
 function scrollToFrame(frameIndex) {
   if (frameIndex < 0 || frameIndex >= totalFrames) return;
-  isScrolling = true;
   targetFrame = frameIndex;
-  
-  // Add a small delay before allowing next scroll
-  setTimeout(() => {
-    isScrolling = false;
-  }, 500);
 }
-
-// Update wheel event listener for stepped scrolling
-window.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  if (isScrolling) return;
-  if (e.deltaY > 0 && targetFrame < totalFrames - 1) {
-    scrollToFrame(targetFrame + 1);
-  } else if (e.deltaY < 0 && targetFrame > 0) {
-    scrollToFrame(targetFrame - 1);
-  }
-}, { passive: false });
 
 // Add touch event handling
 let touchStartY = 0;
-let touchThreshold = 30; // Reduced threshold for better sensitivity
-let lastTouchTime = 0;
-const touchCooldown = 500; // Cooldown period in milliseconds
+let touchThreshold = 10; // Very small threshold for easier scrolling
 
+// Simple touch event handling
 window.addEventListener('touchstart', (e) => {
-  e.preventDefault();
   touchStartY = e.touches[0].clientY;
-  lastTouchTime = Date.now();
-}, { passive: false });
+}, { passive: true });
 
 window.addEventListener('touchmove', (e) => {
-  e.preventDefault();
-  if (isScrolling) return;
-  
-  const currentTime = Date.now();
-  if (currentTime - lastTouchTime < touchCooldown) return;
-  
   const touchY = e.touches[0].clientY;
   const deltaY = touchStartY - touchY;
   
@@ -1257,18 +1211,24 @@ window.addEventListener('touchmove', (e) => {
     if (deltaY > 0 && targetFrame < totalFrames - 1) {
       scrollToFrame(targetFrame + 1);
       touchStartY = touchY;
-      lastTouchTime = currentTime;
     } else if (deltaY < 0 && targetFrame > 0) {
       scrollToFrame(targetFrame - 1);
       touchStartY = touchY;
-      lastTouchTime = currentTime;
     }
   }
-}, { passive: false });
+}, { passive: true });
 
-// Keyboard navigation
+// Add wheel event listener for desktop
+window.addEventListener('wheel', (e) => {
+  if (e.deltaY > 0 && targetFrame < totalFrames - 1) {
+    scrollToFrame(targetFrame + 1);
+  } else if (e.deltaY < 0 && targetFrame > 0) {
+    scrollToFrame(targetFrame - 1);
+  }
+}, { passive: true });
+
+// Add keyboard navigation
 window.addEventListener('keydown', (e) => {
-  if (isScrolling) return;
   if (e.key === 'ArrowDown' || e.key === 'PageDown') {
     scrollToFrame(targetFrame + 1);
   } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
@@ -1282,7 +1242,7 @@ document.body.style.scrollSnapType = 'y mandatory';
 document.body.style.height = `${totalFrames * 100}vh`;
 document.body.style.overflow = 'hidden';
 
-// Initialize first frame and start animation
+// Initialize first frame
 scrollToFrame(0);
 animate();
 
@@ -1294,28 +1254,7 @@ window.addEventListener("resize", () => {
   composer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Apply color preset
-function applyColorPreset(presetName) {
-  if (!colorPresets[presetName]) return;
-
-  // Update params with preset colors
-  params.colorA = colorPresets[presetName].colorA;
-  params.colorB = colorPresets[presetName].colorB;
-  params.colorC = colorPresets[presetName].colorC;
-  params.colorD = colorPresets[presetName].colorD;
-
-  // Update Tweakpane UI
-  colorInputs.forEach((input) => input.refresh());
-
-  // Update lights to match first color
-  light1.color.set(params.colorA);
-  light2.color.set(params.colorB);
-
-  // Rebuild tunnel with new colors
-  createTunnel();
-}
-
-// Apply quality preset based on device
+// Define applyQualityPreset before it is used
 function applyQualityPreset(preset) {
   switch (preset) {
     case "low":
@@ -1356,6 +1295,11 @@ function applyQualityPreset(preset) {
   createTunnel();
 }
 
+// Setup Tweakpane
+const pane = new Pane({
+  container: document.getElementById("tweakpane-container")
+});
+
 // Automatically set quality preset based on device
 if (isLowEndDevice) {
   applyQualityPreset("low");
@@ -1364,11 +1308,6 @@ if (isLowEndDevice) {
 } else {
   applyQualityPreset("high");
 }
-
-// Setup Tweakpane
-const pane = new Pane({
-  container: document.getElementById("tweakpane-container")
-});
 
 // Function to save current values
 function saveCurrentValues() {
@@ -1758,3 +1697,4 @@ createTunnel();
   </script>
 </body>
 </html>
+
