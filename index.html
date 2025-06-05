@@ -403,6 +403,8 @@
         height: 24px !important;
       }
     }
+    .narration-container, .title-container { pointer-events: none !important; }
+    .button-pulse, #continue-btn { pointer-events: auto !important; }
   </style>
 </head>
 <body>
@@ -512,8 +514,8 @@ const params = {
   circleCount: 60,
   tunnelRadius: 3,
   tubeThickness: 0.5,
-  circleSegments: 64,
-  tubeSegments: 6,
+  circleSegments: isMobile ? 64 : 96,
+  tubeSegments: isMobile ? 6 : 8,
   pathAmplitude: 0.5,
 
   // Appearance
@@ -611,13 +613,13 @@ const camera = new THREE.PerspectiveCamera(
 );
 const renderer = new THREE.WebGLRenderer({
   canvas: document.getElementById("tunnel"),
-  antialias: !isLowEndDevice,
+  antialias: true,
   powerPreference: "high-performance"
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
+renderer.toneMappingExposure = 1.1;
 
 // Setup post-processing with bloom
 const composer = new EffectComposer(renderer);
@@ -670,22 +672,28 @@ function getTorusGeometry(radius, tubeThickness, tubeSegments, circleSegments) {
   return geometryPool.torus[key];
 }
 
-// Create tunnel path
+// Dynamically set path amplitude based on aspect ratio
+function getResponsivePathAmplitude() {
+  const aspect = window.innerWidth / window.innerHeight;
+  // For very tall screens, reduce amplitude
+  if (aspect < 0.7) return 0.15;
+  if (aspect < 1) return 0.25;
+  return 0.5; // Default for landscape/desktop
+}
+
+// Update tunnelPath creation to use responsive amplitude
 function createPath() {
   const path = [];
   const segments = 100;
-
+  const amplitude = getResponsivePathAmplitude();
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
     const z = -t * params.tunnelDepth;
-
-    // Sine wave path for more interest
-    const x = Math.sin(t * 10) * params.pathAmplitude;
-    const y = Math.cos(t * 8) * params.pathAmplitude;
-
+    // Sine wave path for more interest, but scale amplitude for mobile
+    const x = Math.sin(t * 10) * amplitude;
+    const y = Math.cos(t * 8) * amplitude;
     path.push(new THREE.Vector3(x, y, z));
   }
-
   return new THREE.CatmullRomCurve3(path);
 }
 
@@ -1011,8 +1019,8 @@ function animate(currentTime = 0) {
   const pathProgress = currentFrameSmooth / (totalFrames - 1);
   const position = tunnelPath.getPointAt(pathProgress);
   camera.position.copy(position);
-  const lookAtPosition = tunnelPath.getPointAt(Math.min(pathProgress + 0.01, 0.99));
-  camera.lookAt(lookAtPosition);
+  // Always look at the center of the tunnel (z slightly ahead)
+  camera.lookAt(new THREE.Vector3(0, 0, position.z - 1));
 
   // Update narration and progress bar based on rounded frame
   const roundedFrame = Math.round(currentFrameSmooth);
@@ -1190,33 +1198,44 @@ function updateNarrationByIndex(index, progress) {
 
 // Update scrollToFrame function
 function scrollToFrame(frameIndex) {
-  if (frameIndex < 0 || frameIndex >= totalFrames) return;
-  targetFrame = frameIndex;
+  if (frameIndex < 0) frameIndex = 0;
+  if (frameIndex > totalFrames - 1) frameIndex = totalFrames - 1;
+  if (targetFrame !== frameIndex) {
+    targetFrame = frameIndex;
+  }
 }
 
 // Add touch event handling
 let touchStartY = 0;
-let touchThreshold = 10; // Very small threshold for easier scrolling
+let lastTouchTime = 0;
+const touchThreshold = 40;
+const swipeCooldown = 300;
 
-// Simple touch event handling
 window.addEventListener('touchstart', (e) => {
   touchStartY = e.touches[0].clientY;
 }, { passive: true });
 
 window.addEventListener('touchmove', (e) => {
+  const now = Date.now();
+  if (now - lastTouchTime < swipeCooldown) return;
   const touchY = e.touches[0].clientY;
   const deltaY = touchStartY - touchY;
-  
   if (Math.abs(deltaY) > touchThreshold) {
     if (deltaY > 0 && targetFrame < totalFrames - 1) {
       scrollToFrame(targetFrame + 1);
-      touchStartY = touchY;
     } else if (deltaY < 0 && targetFrame > 0) {
       scrollToFrame(targetFrame - 1);
-      touchStartY = touchY;
     }
+    lastTouchTime = now;
+    touchStartY = touchY;
   }
 }, { passive: true });
+
+window.addEventListener('touchend', (e) => {
+  if (e.changedTouches && e.changedTouches.length > 0) {
+    touchStartY = e.changedTouches[0].clientY;
+  }
+});
 
 // Add wheel event listener for desktop
 window.addEventListener('wheel', (e) => {
@@ -1227,7 +1246,7 @@ window.addEventListener('wheel', (e) => {
   }
 }, { passive: true });
 
-// Add keyboard navigation
+// Add keyboard navigation for desktop
 window.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowDown' || e.key === 'PageDown') {
     scrollToFrame(targetFrame + 1);
@@ -1248,10 +1267,11 @@ animate();
 
 // Handle resize
 window.addEventListener("resize", () => {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight);
+  tunnelPath = createPath(); // Recreate path with new amplitude
 });
 
 // Define applyQualityPreset before it is used
@@ -1264,7 +1284,7 @@ function applyQualityPreset(preset) {
       params.particlesEnabled = false;
       params.useBloom = false;
       params.starCount = 500; // Reduced from 1000
-      renderer.setPixelRatio(1);
+      renderer.setPixelRatio(window.devicePixelRatio);
       break;
     case "medium":
       params.circleCount = 50; // Reduced from 80
@@ -1274,7 +1294,7 @@ function applyQualityPreset(preset) {
       params.particleCount = 300; // Reduced from 500
       params.useBloom = true;
       params.starCount = 1000; // Reduced from 1500
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.2));
+      renderer.setPixelRatio(window.devicePixelRatio);
       break;
     case "high":
       params.circleCount = 80; // Reduced from 100
@@ -1284,7 +1304,7 @@ function applyQualityPreset(preset) {
       params.particleCount = 500; // Reduced from 1000
       params.useBloom = true;
       params.starCount = 1500; // Reduced from 2000
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.setPixelRatio(window.devicePixelRatio);
       break;
   }
 
@@ -1301,11 +1321,7 @@ const pane = new Pane({
 });
 
 // Automatically set quality preset based on device
-if (isLowEndDevice) {
-  applyQualityPreset("low");
-} else {
-  applyQualityPreset("high");
-}
+applyQualityPreset("high"); // Always use high quality for all devices
 
 // Function to save current values
 function saveCurrentValues() {
@@ -1687,10 +1703,42 @@ function createTunnel() {
   }
 
   console.log('Tunnel rings:', tunnelGroup.children.length);
+
+  // Center camera on tunnel start
+  if (typeof tunnelPath !== 'undefined' && tunnelPath) {
+    const pathStart = tunnelPath.getPoint(0);
+    camera.position.set(pathStart.x, pathStart.y, camera.position.z);
+    camera.lookAt(pathStart.x, pathStart.y, pathStart.z - 1);
+  }
 }
 
 // Ensure the tunnel is created on load
 createTunnel();
+
+function resizeRenderer() {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  if (typeof composer !== 'undefined' && composer) {
+    composer.setSize(window.innerWidth, window.innerHeight);
+  }
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  // Center camera on tunnel start
+  if (typeof tunnelPath !== 'undefined' && tunnelPath) {
+    const pathStart = tunnelPath.getPoint(0);
+    camera.position.set(pathStart.x, pathStart.y, camera.position.z);
+    camera.lookAt(pathStart.x, pathStart.y, pathStart.z - 1);
+  }
+  // If you have a function to recreate tunnel geometry, call it here
+  // recreateTunnel();
+}
+
+// Call once on load
+resizeRenderer();
+
+// On resize and orientation change
+window.addEventListener('resize', resizeRenderer);
+window.addEventListener('orientationchange', resizeRenderer);
 
   </script>
 </body>
