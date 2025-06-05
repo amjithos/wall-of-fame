@@ -526,13 +526,12 @@ const params = {
   roughness: 0.4,
   fogDensity: 0.065,
 
-
   // Effects
   pulseSpeed: 4.7,
   pulseIntensity: 0.8,
   rotationSpeed: 0.011,
-  particlesEnabled: true,
-  particleCount: 500,
+  particlesEnabled: false,
+  particleCount: 0,
   particleSize: 0.04,
   particleSpeed: 0.5,
 
@@ -1679,8 +1678,8 @@ function createTunnel() {
   // Update path
   tunnelPath = createPath();
 
-  // Create particle system
-  createParticles();
+  // Skip particle creation
+  // createParticles();
 
   // Create star field (background only, no warp)
   createStarField();
